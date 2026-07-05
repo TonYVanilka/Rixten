@@ -2,11 +2,7 @@
 #include "rixten.h"
 
 int main() {
+    printf("Hello from Launcher\n");
 
-    RixtenEngine engine;
-    printf("engine init: %d \n", engine.Init());
-
-    printf("hello from launcher\n");
-
-    engine.Destruct();
+    printf("%d\n", AlwaysTrue());
 }

@@ -1,14 +1,10 @@
 #pragma once 
 
-class RixtenEngine {
+#include "api.h"
 
-private:
+extern "C" {
 
-public:
+    RIXTEN_API bool AlwaysTrue();
+    RIXTEN_API bool AlwaysFalse();
 
-    RixtenEngine();
-    ~RixtenEngine();
-
-    bool Init();
-    void Destruct();
-};
+}  // extern "C"
