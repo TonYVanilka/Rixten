@@ -14,9 +14,10 @@ int main() {
 
     DArr<vec1> pool(10);
 
-    pool.push_back({16110});
+    pool.push_back({1580});
+    
+    printf("%d\n", pool[0].x);
 
-    pool.push_back({15404});
-    printf("pool[0] = %d\n", pool[0].x);
+    pool.delete_back();
 
 }
