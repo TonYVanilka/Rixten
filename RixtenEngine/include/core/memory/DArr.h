@@ -12,11 +12,14 @@ struct DArr {
     ~DArr();
 
     void push_back(const T& element);
+    void set(uint32_t index, const T& element);
     void delete_back();
 
     void free();
 
     size_t size();
+    T& back();
+    bool empty();
 
     T& operator[](size_t index);
 
@@ -54,6 +57,25 @@ inline void DArr<T>::push_back(const T& element) {
 }
 
 template <typename T>
+inline void DArr<T>::set(uint32_t index, const T& element) {
+
+    if(elementCount + 1 > maxElementsCount) {
+        elementCount = 0;
+    }
+
+    if (index >= elementCount) {
+
+        void* ptr = arena.getPtr() + arenaOffset + (sizeof(T) * index);
+        elementCount++;
+
+        new(ptr) T(element); 
+    } else {
+        (*this)[index] = element;
+    }
+
+}
+
+template <typename T>
 inline void DArr<T>::delete_back() {
     if(elementCount < 1) return;
     elementCount--;
@@ -63,8 +85,8 @@ inline void DArr<T>::delete_back() {
 template <typename T>
 inline void DArr<T>::free() {
     while(elementCount > 0) {
-        reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (elementCount * sizeof(T)))->~T();
         elementCount--;
+        reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (elementCount * sizeof(T)))->~T();
     }
 
     arena.deallocateByOffset(arenaOffset);
@@ -73,6 +95,16 @@ inline void DArr<T>::free() {
 template <typename T>
 inline size_t DArr<T>::size() {
     return elementCount;
+}
+
+template <typename T>
+inline T& DArr<T>::back() {
+    return (*this)[elementCount];
+}
+
+template <typename T>
+inline bool DArr<T>::empty() {
+    return elementCount != 0;
 }
 
 template <typename T>

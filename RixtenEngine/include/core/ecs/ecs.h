@@ -8,7 +8,7 @@ constexpr uint16_t MAXentities = 500;
 
 struct Entity {
     uint32_t index;
-    uint32_t generation;
+    uint16_t generation;
 };
 
 struct ECS {
@@ -16,6 +16,11 @@ struct ECS {
 private:
 
     DArr<Entity> entities;
+    DArr<uint32_t> sparse;
+    uint32_t countInSparse;
+
+    uint32_t entityCount;
+    uint32_t freeSlotsHeader;
     
 public:
 
@@ -23,6 +28,7 @@ public:
     ~ECS();
 
     Entity& createEntity();
-    void deleteEntity(uint32_t index);
-};
+    void deleteEntity(Entity& handle);
 
+    Entity& getEntity(Entity& handle);
+};
