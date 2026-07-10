@@ -14,7 +14,7 @@ MemoryArena::~MemoryArena() {
     free();
 }
 
-size_t MemoryArena::allocate(size_t size, uint8_t aling) {
+size_t MemoryArena::allocate(size_t size, uint8_t align) {
     
     size_t totalSize = (current + sizeof(SlotHeader) + size);
     
@@ -29,7 +29,7 @@ size_t MemoryArena::allocate(size_t size, uint8_t aling) {
                     usedHeader->isUse = true;
                     usedHeader->size = currOffset;
                     currOffset += sizeof(SlotHeader);
-                    currOffset = alignUP(currOffset, aling);
+                    currOffset = alignUP(currOffset, align);
                     usedHeader->size = currOffset - usedHeader->size;
                     
                     freeSlotsCount--;
@@ -56,7 +56,7 @@ size_t MemoryArena::allocate(size_t size, uint8_t aling) {
     header->isUse = true;
     current += sizeof(SlotHeader);
 
-    current = alignUP(current, aling);
+    current = alignUP(current, align);
     size_t offset = current;
     current += size;
 
@@ -78,6 +78,30 @@ void MemoryArena::deallocateByOffset(size_t offset) {
     header->isUse = false;
     IsFreeSlots = true;
     freeSlotsCount++;
+}
+
+// no tested before !!!
+size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
+    SlotHeader* header = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
+
+    if (newSize <= header->size) {
+        header->size = newSize;
+        return offset;
+    }
+
+    size_t newOffset = allocate(newSize, align);
+    
+    char* newPtr = memory + newOffset;
+    char* oldPtr = memory + offset;
+
+    for (size_t i = 0; i < header->size; i++) {
+        newPtr[i] = oldPtr[i];
+    }
+
+    header->isUse = false;
+    IsFreeSlots = true;
+    freeSlotsCount++;
+    return newOffset;
 }
 
 char* MemoryArena::getPtr() {

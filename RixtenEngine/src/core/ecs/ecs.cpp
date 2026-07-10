@@ -1,10 +1,10 @@
-#include "ecs.h"
+#include "core/ecs/ecs.h"
 
 ECS::ECS() : 
     entities(MAXentities), 
-    sparse(MAXentities), /* devide by 2 for economy memory */
-    countInSparse(0),
-    entityCount(0) {
+    sparse(MAXentities),
+    entityCount(0),
+    entityIndices(0) {
 }
 
 ECS::~ECS() {
@@ -14,12 +14,12 @@ ECS::~ECS() {
 
 Entity& ECS::createEntity() {
     
-    entities.push_back({entityCount, 0});
-    entityCount++;
-    
-    sparse.set(entityCount, entities.size());
-    countInSparse++;
+    entities.push_back({entityIndices, 0});
+    entityIndices++;
 
+    sparse.set(entityIndices, entities.size());
+
+    entityCount++;
     return entities.back();
 }
 
@@ -27,14 +27,15 @@ void ECS::deleteEntity(const Entity& handle) {
 
     Entity movedEntity = entities.back();
 
-    entities.set(sparse[handle.index], entities.back());
-    sparse[handle.index];
+    entities.set(sparse[handle.index], movedEntity);
+    sparse[handle.index] = movedEntity.index;
     
     entities.delete_back();
-
+    entityCount--;
 }
 
 Entity& ECS::getEntity(const Entity& handle) {
-    if (handle.index > entityCount) return 0; // need refactor in the future 
+    if (handle.index > entityCount); // need refactor in the future 
+    printf("sparse handle index %d\n", sparse[handle.index]);
     return entities[sparse[handle.index]];
 }

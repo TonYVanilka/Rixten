@@ -17,9 +17,9 @@ private:
 
     DArr<Entity> entities;
     DArr<uint32_t> sparse;
-    uint32_t countInSparse;
 
     uint32_t entityCount;
+    uint32_t entityIndices;
     uint32_t freeSlotsHeader;
     
 public:
@@ -28,7 +28,7 @@ public:
     ~ECS();
 
     Entity& createEntity();
-    void deleteEntity(Entity& handle);
+    void deleteEntity(const Entity& handle);
 
-    Entity& getEntity(Entity& handle);
+    Entity& getEntity(const Entity& handle);
 };

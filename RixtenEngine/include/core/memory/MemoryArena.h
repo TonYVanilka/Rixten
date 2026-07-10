@@ -29,16 +29,17 @@ struct MemoryArena {
     MemoryArena();
     ~MemoryArena();
 
-    size_t allocate(size_t size, uint8_t aling);
+    size_t allocate(size_t size, uint8_t align);
     void deallocate(uint32_t index);
     void deallocateByOffset(size_t offset);
+    size_t resizeSlot(size_t offset, size_t newSize, uint8_t align);
 
     void free();
     
     char* getPtr();
     
     void resize(size_t newSize);
-    void defragmentation();
+    void defragmentation(); // not work
 
     void* operator[](uint32_t index) { return getHeaderByIndex(index) + sizeof(SlotHeader); }
 
