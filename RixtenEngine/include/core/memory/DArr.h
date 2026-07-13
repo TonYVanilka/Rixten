@@ -110,7 +110,7 @@ inline size_t DArr<T>::size() {
 template <typename T>
 inline T& DArr<T>::back() {
     if(elementCount == 0) { printf("DArr back element is empty - 0"); }
-    return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (elementCount * sizeof(T)));
+    return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + ((elementCount - 1) * sizeof(T)));
 }
 
 template <typename T>
@@ -120,6 +120,6 @@ inline bool DArr<T>::empty() {
 
 template <typename T>
 inline T& DArr<T>::operator[](size_t index) {
-    if(index > elementCount) { printf("DArr idex out the range"); }
+    if(index > maxElementsCount) { printf("DArr idex out the range\n"); }
     return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (sizeof(T) * index));
 }

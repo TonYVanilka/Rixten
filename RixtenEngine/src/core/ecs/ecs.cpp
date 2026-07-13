@@ -15,10 +15,10 @@ ECS::~ECS() {
 Entity& ECS::createEntity() {
     
     entities.push_back({entityIndices, 0});
+    
+    sparse.set(entityIndices, entities.size() - 1);
+    
     entityIndices++;
-
-    sparse.set(entityIndices, entities.size());
-
     entityCount++;
     return entities.back();
 }
@@ -36,6 +36,5 @@ void ECS::deleteEntity(const Entity& handle) {
 
 Entity& ECS::getEntity(const Entity& handle) {
     if (handle.index > entityCount); // need refactor in the future 
-    printf("sparse handle index %d\n", sparse[handle.index]);
     return entities[sparse[handle.index]];
 }

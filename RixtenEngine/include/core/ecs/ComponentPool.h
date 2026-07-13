@@ -41,8 +41,9 @@ inline ComponentPool<T>::~ComponentPool() {
 template <typename T>
 inline void ComponentPool<T>::addComponent(const Entity& handle, const T& component) {
     components.push_back(component);
+    sparse.set(handle.index, components.size() - 1);
+    
     componentIndices++;
-    sparse.set(handle.index, componentIndices);
     componentCount++;
 }
 
@@ -52,12 +53,11 @@ inline void ComponentPool<T>::dellComponent(const Entity& handle) {
     T& MoveComponent = components.back();
 
     components.set(sparse[handle.index], MoveComponent);
-    sparse[handle.index] = MoveComponent;
-    
+    sparse[handle.index] = sparse[sparse.back()]; // need replace first by handle index of movement component
 }
 
 template <typename T>
 inline T& ComponentPool<T>::getComponent(const Entity& handle) {
-    if (handle.index > componentCount) return; // need refactor in the future 
+    if (handle.index > componentCount); // need refactor in the future 
     return components[sparse[handle.index]];
 }
