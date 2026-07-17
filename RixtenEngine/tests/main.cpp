@@ -1,12 +1,11 @@
 #include <cstdio>
+
+#include "core/ecs/componentPool.h"
+#include "core/ecs/entity.h"
 #include "core/memory/DArr.h"
-#include "core/ecs/ecs.h"
 
 struct vec1 {
     int x;
-    ~vec1() {
-        printf("destructor vec1 have called\n");
-    }
 };
 
 int main() {
@@ -22,29 +21,29 @@ int main() {
     //printf("set - %d\n", pool[8].x);
     //printf("set - %d\n", pool[7].x);
 
-    printf("--------------------------------testing ECS\n");
+    printf("-------------------------------- testing ECS --------------------------------\n");
 
     ECS ecs;
 
     Entity simpleEntity = ecs.createEntity();
     Entity simpleEntity1 = ecs.createEntity();
-    Entity simpleEntity2 = ecs.createEntity();
 
-    printf(" simple Entity created index %d, and generation %d \n", 
-        simpleEntity.index, simpleEntity.generation);
-    printf(" simple Entity1 created index %d, and generation %d \n",
-           simpleEntity1.index, simpleEntity1.generation);
-    printf(" simple Entity2 created index %d, and generation %d \n",
-           simpleEntity2.index, simpleEntity2.generation);
-    
+    printf("simple entity = %d, %d \n", simpleEntity.index, simpleEntity.generation);
+    printf("simple entity1 = %d, %d \n", simpleEntity1.index, simpleEntity1.generation);
+
+    ComponentPool<vec1> vec1pool;
+
+    vec1pool.addComponent(simpleEntity, {59});
+    vec1pool.addComponent(simpleEntity1, {48});
+
+    printf("vec1 component simpleEntity %d\n", vec1pool.getComponent(simpleEntity).x);
+    printf("vec1 component simpleEntity1 %d\n", vec1pool.getComponent(simpleEntity1).x);
+
+    vec1pool.removeComponent(simpleEntity);
+
+    printf("vec1 component simpleEntity %d\n", vec1pool.getComponent(simpleEntity).x);
+    printf("vec1 component simpleEntity1 %d\n", vec1pool.getComponent(simpleEntity1).x);
+
     ecs.deleteEntity(simpleEntity);
-
-    printf(" simple Entity getted index %d, and generation %d \n",
-        ecs.getEntity(simpleEntity).index, ecs.getEntity(simpleEntity).generation);
-    printf(" simple Entity1 getted index %d, and generation %d \n",
-           ecs.getEntity(simpleEntity1).index, ecs.getEntity(simpleEntity1).generation);
-    printf(" simple Entity2 getted index %d, and generation %d \n",
-           ecs.getEntity(simpleEntity2).index, ecs.getEntity(simpleEntity2).generation);
-
 
 }

@@ -15,20 +15,18 @@ struct ECS {
 
 private:
 
-    DArr<Entity> entities;
-    DArr<uint32_t> sparse;
-
-    uint32_t entityCount;
-    uint32_t entityIndices;
-    uint32_t freeSlotsHeader;
+    DArr<uint16_t> generation;
+    DArr<uint32_t> freeList;
+    uint32_t entitesCount;
     
 public:
 
     ECS();
     ~ECS();
 
-    Entity& createEntity();
+    Entity createEntity();
     void deleteEntity(const Entity& handle);
 
-    Entity& getEntity(const Entity& handle);
+    bool isValid(const Entity& handle);
+
 };

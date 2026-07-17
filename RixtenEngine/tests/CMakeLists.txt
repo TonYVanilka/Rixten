@@ -15,8 +15,8 @@ endif ()
 set(Utils 
     ${ABOVE_DIR}/src/core/memory/MemoryArena.cpp
     ${ABOVE_DIR}/include/core/memory/DArr.h
-    
-    ${ABOVE_DIR}/src/core/ecs/ecs.cpp
+    ${ABOVE_DIR}/include/core/ecs/componentPool.h
+    ${ABOVE_DIR}/src/core/ecs/entity.cpp
 )
 
 add_executable(RixtenTests 
