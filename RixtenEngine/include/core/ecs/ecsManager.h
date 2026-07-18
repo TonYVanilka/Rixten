@@ -1,42 +1,71 @@
 #pragma once
 #include "core/ecs/entity.h"
 #include "core/ecs/componentPool.h"
-#include "core/ecs/system.h"
+#include "core/ecs/Isystem.h"
+#include "utils/typeIDgenerator.h"
+#include "core/memory/MemoryArena.h"
 
 class ecsManager {
 
 private:
 
-   // DArr<ComponentPool<T>> pools;
+    DArr<IcomponentPool*> pools;
+    DArr<ISystem*> systems;
+    ECS ecs;
+
+    MemoryArena& arena;
 
 public:
 
     ecsManager();
     ~ecsManager();
 
-    Entity createEntity(Entity handle);
+    void Update();
+
+    Entity createEntity();
     void removeEntity(Entity handle);
 
     template <typename T>
-    ComponentPool<T>& createComponent(ComponentPool<T> pool);
+    size_t createPool();
     template <typename T>
-    T& AddComponent(Entity handle, ComponentPool<T>& pool, T component);
-    template <typename T>
-    void RemoveComponent(Entity handle, ComponentPool<T>& pool, T component);
+    ComponentPool<T>& getPool();
 
-    void RegisterSystem(ISystem handle);
+    template <typename T>
+    T& createComponent(Entity handle, T component);
+    template <typename T>
+    void removeComponent(Entity handle, T component);
+
+    void RegisterSystem(ISystem& handle);
 };
 
 template <typename T>
-inline ComponentPool<T>& ecsManager::createComponent(ComponentPool<T> pool) {
-    // TODO: insert return statement here
+inline size_t ecsManager::createPool() {
+    size_t indx = typeIDgenerator::id<T>();
+
+    size_t arenaOffset = arena.allocate(sizeof(ComponentPool<T>), alignof(ComponentPool<T>));
+    IcomponentPool* newPool = new (arena.getPtr() + arenaOffset) ComponentPool<T>();
+    pools.set(indx, newPool);
+
+    return indx;
 }
 
 template <typename T>
-inline T& ecsManager::AddComponent(Entity handle, ComponentPool<T>& pool, T component) {
-    // TODO: insert return statement here
+inline ComponentPool<T>& ecsManager::getPool() {
+    size_t indx = typeIDgenerator::id<T>();
+    return *static_cast<ComponentPool<T>*>(pools[indx]);
+}
+
+// need remade with getPool 
+template <typename T>
+inline T& ecsManager::createComponent(Entity handle, T component) {
+    ComponentPool<T>& pool = getPool<T>();
+    pool.addComponent(handle, component);
+    return pool.getComponent(handle);
 }
 
 template <typename T>
-inline void ecsManager::RemoveComponent(Entity handle, ComponentPool<T>& pool, T component) {
+inline void ecsManager::removeComponent(Entity handle, T component) {
+    size_t indx = typeIDgenerator::id<T>();
+    ComponentPool<T> pool = pools[indx];
+    pool.removeComponent(handle, component);
 }

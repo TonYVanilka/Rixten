@@ -1,49 +1,39 @@
 #include <cstdio>
 
-#include "core/ecs/componentPool.h"
-#include "core/ecs/entity.h"
-#include "core/memory/DArr.h"
+#include "core/ecs/ecsManager.h"
 
 struct vec1 {
     int x;
+};
+
+struct Vec1System : ISystem {
+    void Update(ecsManager& handle, float dt) override;
 };
 
 int main() {
 
     printf("-----This is testing build of engine-----\n");
 
-    DArr<vec1> pool(20);
-
-    pool.push_back({440});
-    pool.set(0, {5870});
-    
-    printf("push back - %d\n", pool[0].x);
-    //printf("set - %d\n", pool[8].x);
-    //printf("set - %d\n", pool[7].x);
 
     printf("-------------------------------- testing ECS --------------------------------\n");
 
-    ECS ecs;
+    ecsManager ecs;
+    Vec1System vec1Sys;
 
-    Entity simpleEntity = ecs.createEntity();
-    Entity simpleEntity1 = ecs.createEntity();
+    ecs.createPool<vec1>();
+    Entity simple = ecs.createEntity();
+    ecs.createComponent<vec1>(simple, vec1{5346});
+    
+    ecs.RegisterSystem(vec1Sys);
 
-    printf("simple entity = %d, %d \n", simpleEntity.index, simpleEntity.generation);
-    printf("simple entity1 = %d, %d \n", simpleEntity1.index, simpleEntity1.generation);
+    ecs.Update();
+}
 
-    ComponentPool<vec1> vec1pool;
+void Vec1System::Update(ecsManager& handle, float dt) {
+    auto vec1Comps = handle.getPool<vec1>().dense_components;
 
-    vec1pool.addComponent(simpleEntity, {59});
-    vec1pool.addComponent(simpleEntity1, {48});
-
-    printf("vec1 component simpleEntity %d\n", vec1pool.getComponent(simpleEntity).x);
-    printf("vec1 component simpleEntity1 %d\n", vec1pool.getComponent(simpleEntity1).x);
-
-    vec1pool.removeComponent(simpleEntity);
-
-    printf("vec1 component simpleEntity %d\n", vec1pool.getComponent(simpleEntity).x);
-    printf("vec1 component simpleEntity1 %d\n", vec1pool.getComponent(simpleEntity1).x);
-
-    ecs.deleteEntity(simpleEntity);
+    for(int i = 0; i < vec1Comps.size(); i++) {
+        printf("vec1Components %d\n", vec1Comps[i].x);
+    }
 
 }

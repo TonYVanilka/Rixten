@@ -82,22 +82,24 @@ void MemoryArena::deallocateByOffset(size_t offset) {
 
 // no tested before !!!
 size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
-    SlotHeader* header = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
+    SlotHeader* usedHeader = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
 
-    if (newSize <= header->size) {
-        header->size = newSize;
+    if (newSize <= usedHeader->size) {
+        usedHeader->size = newSize;
         return offset;
     }
 
+    size_t oldSize = usedHeader->size;
     size_t newOffset = allocate(newSize, align);
     
     char* newPtr = memory + newOffset;
     char* oldPtr = memory + offset;
 
-    for (size_t i = 0; i < header->size; i++) {
+    for (size_t i = 0; i < oldSize; i++) {
         newPtr[i] = oldPtr[i];
     }
 
+    SlotHeader* header = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));   
     header->isUse = false;
     IsFreeSlots = true;
     freeSlotsCount++;

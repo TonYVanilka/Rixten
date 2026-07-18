@@ -1,15 +1,16 @@
 #pragma once
 #include "core/ecs/entity.h"
 #include "core/memory/DArr.h"
+#include "core/ecs/IcomponentPool.h"
 
 constexpr uint32_t MinComponentsCount = MAXentities / 4;
 
 template<typename T>
-struct ComponentPool {
+struct ComponentPool : IcomponentPool {
     
 private:
 
-    DArr<T> dense_components;
+    
     DArr<uint32_t> sparse;
     DArr<uint32_t> entitiesIndices;
 
@@ -18,6 +19,8 @@ private:
 
 public:
 
+    DArr<T> dense_components;
+    
     ComponentPool();
     ~ComponentPool();
 
@@ -25,6 +28,7 @@ public:
     void removeComponent(const Entity& handle);
 
     T& getComponent(const Entity& handle);
+
 
 };
 
