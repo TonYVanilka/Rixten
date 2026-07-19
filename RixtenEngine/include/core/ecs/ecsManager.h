@@ -3,13 +3,14 @@
 #include "core/ecs/componentPool.h"
 #include "core/ecs/Isystem.h"
 #include "utils/typeIDgenerator.h"
-#include "core/memory/MemoryArena.h"
+
+#include "core/memory/MemoryArena.h" // need refactor
 
 class ecsManager {
 
 private:
 
-    DArr<IcomponentPool*> pools;
+    DArr<size_t> pools;
     DArr<ISystem*> systems;
     ECS ecs;
 
@@ -28,10 +29,10 @@ public:
     template <typename T>
     size_t createPool();
     template <typename T>
-    ComponentPool<T>& getPool();
+    ComponentPool<T>* getPool();
 
     template <typename T>
-    T& createComponent(Entity handle, T component);
+    T* createComponent(Entity handle, T component);
     template <typename T>
     void removeComponent(Entity handle, T component);
 
@@ -43,29 +44,27 @@ inline size_t ecsManager::createPool() {
     size_t indx = typeIDgenerator::id<T>();
 
     size_t arenaOffset = arena.allocate(sizeof(ComponentPool<T>), alignof(ComponentPool<T>));
-    IcomponentPool* newPool = new (arena.getPtr() + arenaOffset) ComponentPool<T>();
-    pools.set(indx, newPool);
+    new(arena.getPtr() + arenaOffset) ComponentPool<T>();
+    pools.set(indx, arenaOffset);
 
     return indx;
 }
 
 template <typename T>
-inline ComponentPool<T>& ecsManager::getPool() {
+inline ComponentPool<T>* ecsManager::getPool() {
     size_t indx = typeIDgenerator::id<T>();
-    return *static_cast<ComponentPool<T>*>(pools[indx]);
+    return reinterpret_cast<ComponentPool<T>*>(arena.getPtr() + pools[indx]);
 }
 
-// need remade with getPool 
 template <typename T>
-inline T& ecsManager::createComponent(Entity handle, T component) {
-    ComponentPool<T>& pool = getPool<T>();
-    pool.addComponent(handle, component);
-    return pool.getComponent(handle);
+inline T* ecsManager::createComponent(Entity handle, T component) {
+    ComponentPool<T>* pool = getPool<T>();
+    pool->addComponent(handle, component);
+    return pool->getComponent(handle);
 }
 
 template <typename T>
 inline void ecsManager::removeComponent(Entity handle, T component) {
-    size_t indx = typeIDgenerator::id<T>();
-    ComponentPool<T> pool = pools[indx];
-    pool.removeComponent(handle, component);
+    ComponentPool<T>* pool = getPool<T>();
+    pool->removeComponent(handle, component);
 }

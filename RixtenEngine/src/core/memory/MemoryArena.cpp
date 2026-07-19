@@ -1,5 +1,7 @@
 #include "core/memory/MemoryArena.h"
 
+#include <cstdio>
+
 MemoryArena& MemoryArena::GetInstance() {
     static MemoryArena memoryArena;
     return memoryArena;
@@ -62,7 +64,6 @@ size_t MemoryArena::allocate(size_t size, uint8_t align) {
 
     header->sizeToNextHeader = current - HeaderStart;
     header->size = header->sizeToNextHeader;
-
     return offset;
 }
 
@@ -82,6 +83,7 @@ void MemoryArena::deallocateByOffset(size_t offset) {
 
 // no tested before !!!
 size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
+    printf("resize slot!!!\n");
     SlotHeader* usedHeader = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
 
     if (newSize <= usedHeader->size) {
@@ -126,6 +128,7 @@ char* MemoryArena::getHeaderByIndex(uint32_t index) {
 }
 
 void MemoryArena::resize(size_t newSize) {
+    printf("resize called!!!\n");
     if (newSize > MaxMemoryAllocationKB) {
         defragmentation();
         return;

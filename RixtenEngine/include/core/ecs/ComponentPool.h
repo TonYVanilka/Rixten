@@ -1,16 +1,15 @@
 #pragma once
 #include "core/ecs/entity.h"
 #include "core/memory/DArr.h"
-#include "core/ecs/IcomponentPool.h"
 
 constexpr uint32_t MinComponentsCount = MAXentities / 4;
 
 template<typename T>
-struct ComponentPool : IcomponentPool {
+struct ComponentPool {
     
 private:
-
     
+    DArr<T> dense_components;
     DArr<uint32_t> sparse;
     DArr<uint32_t> entitiesIndices;
 
@@ -19,16 +18,16 @@ private:
 
 public:
 
-    DArr<T> dense_components;
-    
     ComponentPool();
     ~ComponentPool();
 
     void addComponent(const Entity& handle, const T& component);
     void removeComponent(const Entity& handle);
 
-    T& getComponent(const Entity& handle);
+    bool hasComponent(const Entity& handle) const;
 
+    T* getComponent(const Entity& handle);
+    DArr<T>& getComponents();
 
 };
 
@@ -67,7 +66,17 @@ inline void ComponentPool<T>::removeComponent(const Entity& handle) {
 }
 
 template <typename T>
-inline T& ComponentPool<T>::getComponent(const Entity& handle) {
+inline bool ComponentPool<T>::hasComponent(const Entity& handle) const {
+    return sparse[handle.index] < dense_components.size();
+}
+
+template <typename T>
+inline T* ComponentPool<T>::getComponent(const Entity& handle) {
      // need refactor in the future
-    return dense_components[sparse[handle.index]];
+    return &dense_components[sparse[handle.index]];
+}
+
+template <typename T>
+inline DArr<T>& ComponentPool<T>::getComponents() {
+    return dense_components;
 }

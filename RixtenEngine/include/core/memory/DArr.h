@@ -64,6 +64,7 @@ template <typename T>
 inline void DArr<T>::set(uint32_t index, const T& element) {
 
     if(elementCount + 1 > maxElementsCount) {
+        printf("set in dArr out of the range\n");
         resize(maxElementsCount * 2);
     }
 

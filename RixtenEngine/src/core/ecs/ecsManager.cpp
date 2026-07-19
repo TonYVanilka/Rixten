@@ -8,7 +8,7 @@ ecsManager::~ecsManager() {
 
 void ecsManager::Update() {
     for(int i = 0; i < systems.size(); i++) {
-        systems[i]->Update(*this, 4.6); // need add dt
+        systems[i]->Update(*this, 0.0f); // need add dt
     }
 }
 

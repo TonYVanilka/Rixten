@@ -8,8 +8,7 @@ namespace typeIDgenerator {
 
     template<typename T>
     size_t id() {
-        size_t value = counter++;
+        static size_t value = counter++;
         return value;
     }
 }
-

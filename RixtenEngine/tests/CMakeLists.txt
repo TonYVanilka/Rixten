@@ -35,6 +35,10 @@ target_include_directories(RixtenTests PRIVATE
 )
 
 # compiler flags 
-if (MSVC)
-    target_compile_options(RixtenTests PRIVATE -fsanitize=address -g -O1 -fno-omit-frame-pointer)
+if(MSVC)
+    target_compile_options(RixtenTests PRIVATE
+        /fsanitize=address
+        /Od
+        /RTC-
+    )
 endif()
