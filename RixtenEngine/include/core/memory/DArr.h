@@ -1,10 +1,9 @@
 #pragma once
-#include <cassert>
 #include <cstddef>
-#include <cstdio>
 #include <new>
 
 #include "core/memory/MemoryArena.h"
+#include "utils/logger.h"
 
 template<typename T>
 struct DArr {
@@ -28,12 +27,14 @@ public:
 
     void free();
 
-    size_t size();
+    size_t size() { return elementCount; }
+    size_t size() const { return elementCount; }
+
     T& back();
     bool empty();
 
     T& operator[](size_t index);
-
+    const T& operator[](size_t index) const;
 };
 
 template <typename T>
@@ -64,7 +65,7 @@ template <typename T>
 inline void DArr<T>::set(uint32_t index, const T& element) {
 
     if(elementCount + 1 > maxElementsCount) {
-        printf("set in dArr out of the range\n");
+        LOG_ERROR("DArr out of the range!");
         resize(maxElementsCount * 2);
     }
 
@@ -82,7 +83,7 @@ inline void DArr<T>::set(uint32_t index, const T& element) {
 
 template <typename T>
 inline void DArr<T>::resize(size_t newElementCount) {
-    printf("DArr resize was called, new count of elements: %zu\n", newElementCount); // debug !!
+    LOG_DEBUG("DArr resize slot called");
     arenaOffset = arena.resizeSlot(arenaOffset, newElementCount * sizeof(T), alignof(T));
 }
 
@@ -104,13 +105,8 @@ inline void DArr<T>::free() {
 }
 
 template <typename T>
-inline size_t DArr<T>::size() {
-    return elementCount;
-}
-
-template <typename T>
 inline T& DArr<T>::back() {
-    if(elementCount == 0) { printf("DArr back element is empty - 0"); }
+    if(elementCount == 0) { LOG_FATAL("DArr back function has 0 element count");}
     return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + ((elementCount - 1) * sizeof(T)));
 }
 
@@ -121,6 +117,12 @@ inline bool DArr<T>::empty() {
 
 template <typename T>
 inline T& DArr<T>::operator[](size_t index) {
-    if(index > maxElementsCount) { printf("DArr idex out the range\n"); }
+    if(index >= maxElementsCount) { LOG_FATAL("DArr index out of the range"); }
+    return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (sizeof(T) * index));
+}
+
+template <typename T>
+inline const T& DArr<T>::operator[](size_t index) const {
+    if(index >= maxElementsCount) { LOG_FATAL("DArr index out of the range"); }
     return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (sizeof(T) * index));
 }

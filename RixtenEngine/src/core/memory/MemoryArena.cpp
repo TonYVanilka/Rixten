@@ -1,6 +1,6 @@
 #include "core/memory/MemoryArena.h"
 
-#include <cstdio>
+#include "utils/logger.h"
 
 MemoryArena& MemoryArena::GetInstance() {
     static MemoryArena memoryArena;
@@ -83,7 +83,7 @@ void MemoryArena::deallocateByOffset(size_t offset) {
 
 // no tested before !!!
 size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
-    printf("resize slot!!!\n");
+    LOG_WARN("Global arena was resized!");
     SlotHeader* usedHeader = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
 
     if (newSize <= usedHeader->size) {
@@ -128,7 +128,7 @@ char* MemoryArena::getHeaderByIndex(uint32_t index) {
 }
 
 void MemoryArena::resize(size_t newSize) {
-    printf("resize called!!!\n");
+    LOG_DEBUG("slot in arena was resized!");
     if (newSize > MaxMemoryAllocationKB) {
         defragmentation();
         return;
@@ -146,6 +146,7 @@ void MemoryArena::resize(size_t newSize) {
 
 // doesn't work at all
 void MemoryArena::defragmentation() {
+    LOG_DEBUG("defragmentatation of global arena called!!! it fatal");
     char* dfMemory = new char[MemorySize];
     current = 0;
     size_t dfOffset = 0;

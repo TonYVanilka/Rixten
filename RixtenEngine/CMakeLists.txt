@@ -17,6 +17,7 @@ target_include_directories(RixtenEngine PRIVATE
 
 # Rixten Settings
 target_compile_definitions(RixtenEngine PRIVATE RIXTEN_EXPORTS)
+#target_compile_definitions(RixtenTests PRIVATE DISABLE_LOGGING)
 
 # Windows
 if (WIN32) 

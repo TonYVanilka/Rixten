@@ -17,7 +17,7 @@ private:
 
     DArr<uint16_t> generation;
     DArr<uint32_t> freeList;
-    uint32_t entitesCount;
+    uint32_t entitiesCount;
     
 public:
 

@@ -1,11 +1,11 @@
 #pragma once
-#include "core/ecs/entity.h"
+#include "core/ecs/IcomponentPool.h"
 #include "core/memory/DArr.h"
 
 constexpr uint32_t MinComponentsCount = MAXentities / 4;
 
 template<typename T>
-struct ComponentPool {
+struct ComponentPool : IcomponentPool {
     
 private:
     
@@ -22,9 +22,9 @@ public:
     ~ComponentPool();
 
     void addComponent(const Entity& handle, const T& component);
-    void removeComponent(const Entity& handle);
+    void removeComponent(const Entity& handle) override;
 
-    bool hasComponent(const Entity& handle) const;
+    bool hasComponent(const Entity& handle) const override;
 
     T* getComponent(const Entity& handle);
     DArr<T>& getComponents();
@@ -55,7 +55,7 @@ inline void ComponentPool<T>::addComponent(const Entity& handle, const T& compon
 
 template <typename T>
 inline void ComponentPool<T>::removeComponent(const Entity& handle) {
-    
+    if (!hasComponent()) {LOG_WARN("Component pool hasn't Entity ", handle) return;}
     uint32_t removedComponent = sparse[handle.index];
     dense_components[removedComponent] = dense_components.back();
 

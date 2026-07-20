@@ -1,12 +1,9 @@
 #include <cstdio>
 
 #include "core/ecs/ecsManager.h"
+#include "utils/logger.h"
 
 struct vec1 {
-    int x;
-};
-
-struct vec2 {
     int x;
 };
 
@@ -14,51 +11,42 @@ struct Vec1System : ISystem {
     void Update(ecsManager& handle, float dt) override;
 };
 
-struct Vec2System : ISystem {
-    void Update(ecsManager& handle, float dt) override;
-};
-
 int main() {
 
-    printf("-----This is testing build of engine-----\n");
-
-    printf("-------------------------------- testing ECS --------------------------------\n");
+    LOG_DEBUG("Test logging");
+    LOG_INFO("Test logging");
+    LOG_WARN("Test logging");
+    LOG_ERROR("Test logging");
+    LOG_FATAL("Test logging");
 
     ecsManager ecs;
-    Vec1System vec1Sys;
-    Vec2System vec2Sys;
-
-    printf("pool index %d \n", ecs.createPool<vec1>());
-    ecs.createPool<vec2>();
+    Vec1System sys;
 
     Entity simple = ecs.createEntity();
     Entity simple1 = ecs.createEntity();
+    ecs.createPool<vec1>();
+    ecs.createComponent(simple, vec1{5632});
+    ecs.createComponent(simple1, vec1{5523632});
 
-    ecs.createComponent<vec1>(simple, vec1{1});
-    ecs.createComponent<vec1>(simple1, vec1{2});
+    ecs.RegisterSystem(sys);
 
-    ecs.createComponent<vec2>(simple1, vec2{2});
+    ecs.Update();
 
-    ecs.RegisterSystem(vec1Sys);
-    ecs.RegisterSystem(vec2Sys);
+    ecs.removeEntity(simple);
+
+    ecs.Update();
+
+    Entity simple2 = ecs.createEntity();
+
+    ecs.createComponent(simple1, vec1{457823});
 
     ecs.Update();
 }
 
 void Vec1System::Update(ecsManager& handle, float dt) {
-    auto& vec1Comps = handle.getPool<vec1>()->getComponents();
-
-    for(int i = 0; i < vec1Comps.size(); i++) {
-        printf("vec1Components %d\n", vec1Comps[i].x);
-    }
-}
-
-void Vec2System::Update(ecsManager& handle, float dt) {
-    auto& vec2Comps = handle.getPool<vec2>()->getComponents();
-    auto& vec1Comps = handle.getPool<vec1>()->getComponents();
-
-    for (int i = 0; i < vec2Comps.size(); i++) {
-        vec2Comps[i].x += vec1Comps[i].x;
-        printf("vec2Components %d\n", vec2Comps[i].x);
+    auto& vec1Pool = handle.getPool<vec1>()->getComponents();
+    
+    for(int i = 0; i < vec1Pool.size(); i++) {
+        LOG_INFO("vec 1 pool: ", i, " ", vec1Pool[i].x);
     }
 }

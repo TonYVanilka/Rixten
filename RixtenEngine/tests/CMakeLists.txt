@@ -23,6 +23,7 @@ set(Utils
     ${ABOVE_DIR}/include/utils/typeIDgenerator.h
     ${ABOVE_DIR}/include/core/ecs/Isystem.h
     ${ABOVE_DIR}/include/core/ecs/IcomponentPool.h
+    ${ABOVE_DIR}/include/utils/logger.h
 )
 
 add_executable(RixtenTests 
@@ -33,6 +34,9 @@ add_executable(RixtenTests
 target_include_directories(RixtenTests PRIVATE
     ${ABOVE_DIR}/include
 )
+
+# Rixten TEST Settings
+#target_compile_definitions(RixtenTests PRIVATE DISABLE_LOGGING)
 
 # compiler flags 
 if(MSVC)

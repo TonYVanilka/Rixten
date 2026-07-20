@@ -8,6 +8,7 @@ struct SlotHeader {
     bool isUse;
 };
 
+// Global arena of memory, can resize
 struct MemoryArena {
     
     //constexpr size_t MAXmemoryMb = MAX_MEMORY_MB;

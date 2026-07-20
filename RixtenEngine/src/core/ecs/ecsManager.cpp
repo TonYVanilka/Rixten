@@ -16,13 +16,15 @@ Entity ecsManager::createEntity() {
     return ecs.createEntity();
 }
 
-// doesn't work
+// can has problems, i don't test generation in entity
 void ecsManager::removeEntity(Entity handle) {
-    // ecs.deleteEntity(handle);
-    // for(int i = 0; i < pools.size(); i++) {
-    //     ComponentPool<R>
-    //     pools[i].removeComponent();
-    // }
+    if (!ecs.isValid(handle)) {LOG_WARN("can't remove entity, Entity nonvalid", handle) return;}
+    for(int i = 0; i < pools.size(); i++) {
+        IcomponentPool* pool = reinterpret_cast<IcomponentPool*>(arena.getPtr() + pools[i]);
+        if (pool->hasComponent(handle)) 
+            pool->removeComponent(handle);
+    }
+    ecs.deleteEntity(handle);
 }
 
 void ecsManager::RegisterSystem(ISystem& handle) {
