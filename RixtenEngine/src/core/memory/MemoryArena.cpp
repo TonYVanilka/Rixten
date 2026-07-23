@@ -83,7 +83,7 @@ void MemoryArena::deallocateByOffset(size_t offset) {
 
 // no tested before !!!
 size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
-    LOG_WARN("Global arena was resized!");
+    LOG_WARN("Slot in global arena was resized!");
     SlotHeader* usedHeader = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
 
     if (newSize <= usedHeader->size) {
@@ -128,7 +128,7 @@ char* MemoryArena::getHeaderByIndex(uint32_t index) {
 }
 
 void MemoryArena::resize(size_t newSize) {
-    LOG_DEBUG("slot in arena was resized!");
+    LOG_DEBUG("Global arena was resized!");
     if (newSize > MaxMemoryAllocationKB) {
         defragmentation();
         return;

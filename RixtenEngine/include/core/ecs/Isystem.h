@@ -1,8 +1,8 @@
 #pragma once
 
-class ecsManager;
+class EcsManager;
 
 struct ISystem {
     virtual ~ISystem() = default;
-    virtual void Update(ecsManager& handle, float dt) = 0;
+    virtual void Update(EcsManager& handle, float dt) = 0;
 };

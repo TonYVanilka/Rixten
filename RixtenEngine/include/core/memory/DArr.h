@@ -29,6 +29,7 @@ public:
 
     size_t size() { return elementCount; }
     size_t size() const { return elementCount; }
+    size_t maxSize() { return maxElementsCount; }
 
     T& back();
     bool empty();
@@ -64,8 +65,12 @@ inline void DArr<T>::push_back(const T& element) {
 template <typename T>
 inline void DArr<T>::set(uint32_t index, const T& element) {
 
-    if(elementCount + 1 > maxElementsCount) {
+    if(index > elementCount) {
         LOG_ERROR("DArr out of the range!");
+        return;
+    }
+
+    if(elementCount > maxElementsCount) {
         resize(maxElementsCount * 2);
     }
 
@@ -83,7 +88,8 @@ inline void DArr<T>::set(uint32_t index, const T& element) {
 
 template <typename T>
 inline void DArr<T>::resize(size_t newElementCount) {
-    LOG_DEBUG("DArr resize slot called");
+    if (newElementCount == 0) LOG_WARN("Darr has 0 newElementCount to resize");
+    LOG_WARN("DArr resize slot called");
     arenaOffset = arena.resizeSlot(arenaOffset, newElementCount * sizeof(T), alignof(T));
 }
 

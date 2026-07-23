@@ -19,11 +19,13 @@ set(Utils
     ${ABOVE_DIR}/include/core/memory/DArr.h
     ${ABOVE_DIR}/include/core/ecs/componentPool.h
     ${ABOVE_DIR}/src/core/ecs/entity.cpp
-    ${ABOVE_DIR}/src/core/ecs/ecsManager.cpp
+    ${ABOVE_DIR}/src/core/ecs/EcsManager.cpp
     ${ABOVE_DIR}/include/utils/typeIDgenerator.h
     ${ABOVE_DIR}/include/core/ecs/Isystem.h
     ${ABOVE_DIR}/include/core/ecs/IcomponentPool.h
     ${ABOVE_DIR}/include/utils/logger.h
+    ${ABOVE_DIR}src/core/render/openGL/window.cpp
+    ${ABOVE_DIR}src/core/render/openGL/RixtenGlfwConfig.cpp
 )
 
 add_executable(RixtenTests 
@@ -37,6 +39,33 @@ target_include_directories(RixtenTests PRIVATE
 
 # Rixten TEST Settings
 #target_compile_definitions(RixtenTests PRIVATE DISABLE_LOGGING)
+#target_compile_definitions(RixtenTests PRIVATE VULCAN_API)
+
+# Library links
+
+# GLAD
+add_library(glad STATIC ${ABOVE_DIR}/external/glad/src/glad.c)
+target_include_directories(glad PUBLIC ${ABOVE_DIR}/external/glad/include)
+
+target_link_libraries(${CMAKE_PROJECT_NAME}  PRIVATE glad)
+target_include_directories(${CMAKE_PROJECT_NAME}  PRIVATE ${ABOVE_DIR}/external/glad/include)
+
+target_link_libraries(${CMAKE_PROJECT_NAME}  PRIVATE glad)
+target_include_directories(${CMAKE_PROJECT_NAME}  PRIVATE ${ABOVE_DIR}/external/glad/include)
+
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(../external/glfw ../build/glfw)	
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE glfw)
+
+# OpenGL
+find_package(OpenGL REQUIRED)
+target_link_libraries(${CMAKE_PROJECT_NAME}  PRIVATE OpenGL::GL)
 
 # compiler flags 
 if(MSVC)

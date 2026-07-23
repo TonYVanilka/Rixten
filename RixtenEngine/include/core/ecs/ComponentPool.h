@@ -2,7 +2,7 @@
 #include "core/ecs/IcomponentPool.h"
 #include "core/memory/DArr.h"
 
-constexpr uint32_t MinComponentsCount = MAXentities / 4;
+constexpr uint32_t MinComponentsCount = MAXentities;
 
 template<typename T>
 struct ComponentPool : IcomponentPool {
@@ -55,7 +55,7 @@ inline void ComponentPool<T>::addComponent(const Entity& handle, const T& compon
 
 template <typename T>
 inline void ComponentPool<T>::removeComponent(const Entity& handle) {
-    if (!hasComponent()) {LOG_WARN("Component pool hasn't Entity ", handle) return;}
+    if (!hasComponent(handle)) {LOG_WARN("Component pool hasn't Entity ", handle.index) return;}
     uint32_t removedComponent = sparse[handle.index];
     dense_components[removedComponent] = dense_components.back();
 

@@ -4,7 +4,7 @@
 
 #include "core/memory/DArr.h"
 
-constexpr uint16_t MAXentities = 500;
+constexpr uint16_t MAXentities = 100;
 
 struct Entity {
     uint32_t index;

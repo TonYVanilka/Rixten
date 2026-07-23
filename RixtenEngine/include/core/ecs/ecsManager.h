@@ -6,7 +6,7 @@
 
 #include "core/memory/MemoryArena.h" // need refactor
 
-class ecsManager {
+class EcsManager {
 
 private:
 
@@ -18,8 +18,8 @@ private:
 
 public:
 
-    ecsManager();
-    ~ecsManager();
+    EcsManager();
+    ~EcsManager();
 
     void Update();
 
@@ -34,13 +34,15 @@ public:
     template <typename T>
     T* createComponent(Entity handle, T component);
     template <typename T>
+    T* getComponent(Entity handle);
+    template <typename T>
     void removeComponent(Entity handle, T component);
 
     void RegisterSystem(ISystem& handle);
 };
 
 template <typename T>
-inline size_t ecsManager::createPool() {
+inline size_t EcsManager::createPool() {
     size_t indx = typeIDgenerator::id<T>();
 
     size_t arenaOffset = arena.allocate(sizeof(ComponentPool<T>), alignof(ComponentPool<T>));
@@ -51,20 +53,26 @@ inline size_t ecsManager::createPool() {
 }
 
 template <typename T>
-inline ComponentPool<T>* ecsManager::getPool() {
+inline ComponentPool<T>* EcsManager::getPool() {
     size_t indx = typeIDgenerator::id<T>();
     return reinterpret_cast<ComponentPool<T>*>(arena.getPtr() + pools[indx]);
 }
 
 template <typename T>
-inline T* ecsManager::createComponent(Entity handle, T component) {
+inline T* EcsManager::createComponent(Entity handle, T component) {
     ComponentPool<T>* pool = getPool<T>();
     pool->addComponent(handle, component);
     return pool->getComponent(handle);
 }
 
 template <typename T>
-inline void ecsManager::removeComponent(Entity handle, T component) {
+inline T* EcsManager::getComponent(Entity handle) {
+    ComponentPool<T>* pool = getPool<T>();
+    return pool->getComponent(handle);
+}
+
+template <typename T>
+inline void EcsManager::removeComponent(Entity handle, T component) {
     ComponentPool<T>* pool = getPool<T>();
     pool->removeComponent(handle, component);
 }
