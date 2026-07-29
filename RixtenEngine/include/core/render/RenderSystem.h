@@ -1,11 +1,13 @@
 #pragma once
 #include "core/ecs/Isystem.h"
+#include "core/render/IRenderApi.h"
 
-class RenderSystem : ISystem {
+struct RenderSystem : ISystem {
+
+    IRenderApi* renderer;
 
 public:
 
-    RenderSystem();
-    ~RenderSystem();
-    
+    RenderSystem(IRenderApi* renderer_);
+    void Update(EcsManager& handle, float dt) override;
 };

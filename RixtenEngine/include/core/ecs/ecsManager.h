@@ -46,7 +46,7 @@ inline size_t EcsManager::createPool() {
     size_t indx = typeIDgenerator::id<T>();
 
     size_t arenaOffset = arena.allocate(sizeof(ComponentPool<T>), alignof(ComponentPool<T>));
-    new(arena.getPtr() + arenaOffset) ComponentPool<T>();
+    new(arena.getPtr(arenaOffset)) ComponentPool<T>();
     pools.set(indx, arenaOffset);
 
     return indx;
@@ -55,7 +55,7 @@ inline size_t EcsManager::createPool() {
 template <typename T>
 inline ComponentPool<T>* EcsManager::getPool() {
     size_t indx = typeIDgenerator::id<T>();
-    return reinterpret_cast<ComponentPool<T>*>(arena.getPtr() + pools[indx]);
+    return reinterpret_cast<ComponentPool<T>*>(arena.getPtr(pools[indx]));
 }
 
 template <typename T>

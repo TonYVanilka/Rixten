@@ -36,9 +36,9 @@ struct MemoryArena {
     size_t resizeSlot(size_t offset, size_t newSize, uint8_t align);
 
     void free();
-    
-    char* getPtr();
-    
+
+    char* getPtr(size_t arenaOffset);
+
     void resize(size_t newSize);
     void defragmentation(); // not work
 

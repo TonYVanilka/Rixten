@@ -1,21 +1,12 @@
-#include "core/render/openGL/window.h"
+#include "core/render/openGL/WindowOpenGL.h"
 #include "utils/logger.h"
 
-window::window() {
-}
-
-window::~window() {
-    Destroy();
-}
-
-void window::Init(int width_, int height_, const char* title_) {
-    RixtenGlfwConfig::init();
-
+WindowOpenGL::WindowOpenGL(int width_, int height_, const char* title_) {
     handle = glfwCreateWindow(width_, height_, title_, NULL, NULL);
-    
-    if(handle == nullptr) {
-        LOG_ERROR("Failed to Init OpenGL window: ", title_);  
-        Destroy();
+
+    if (handle == nullptr) {
+        LOG_ERROR("Failed to Init OpenGL window: ", title_);
+        RixtenGlfwConfig::terminate();
         return;
     }
 
@@ -23,31 +14,31 @@ void window::Init(int width_, int height_, const char* title_) {
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         LOG_ERROR("Failed to Init Glad");
-        Destroy();
+        RixtenGlfwConfig::terminate();
         return;
     }
 }
 
-void window::Destroy() {
+WindowOpenGL::~WindowOpenGL() {
     RixtenGlfwConfig::terminate();
 }
 
-void window::Update() {
+void WindowOpenGL::Update() {
     glfwSwapBuffers(handle);
     glfwPollEvents();
     // a temporary solution
     // glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // glClear(GL_COLOR_BUFFER_BIT);
-}    
+}
 
-bool window::IsShouldClose() {
+bool WindowOpenGL::IsShouldClose() {
     return glfwWindowShouldClose(handle);
 }
 
-void window::setSize(int width, int height) {
+void WindowOpenGL::setSize(int width, int height) {
     glfwSetWindowSize(handle, width, height);
 }
 
-void window::setTitle(const char* title_) {
+void WindowOpenGL::setTitle(const char* title_) {
     glfwSetWindowTitle(handle, title_);
 }

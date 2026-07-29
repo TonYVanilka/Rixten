@@ -20,7 +20,7 @@ Entity EcsManager::createEntity() {
 void EcsManager::removeEntity(Entity handle) {
     if (!ecs.isValid(handle)) {LOG_WARN("can't remove entity, Entity nonvalid", handle.index) return;}
     for(int i = 0; i < pools.size(); i++) {
-        IcomponentPool* pool = reinterpret_cast<IcomponentPool*>(arena.getPtr() + pools[i]);
+        IcomponentPool* pool = reinterpret_cast<IcomponentPool*>(arena.getPtr(pools[i]));
         if (pool->hasComponent(handle)) 
             pool->removeComponent(handle);
     }

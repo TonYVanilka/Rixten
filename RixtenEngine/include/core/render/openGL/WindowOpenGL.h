@@ -1,7 +1,7 @@
 #pragma once
 #include "core/render/openGL/RixtenGlfwConfig.h"
 
-struct window {
+struct WindowOpenGL {
     
 private:
 
@@ -13,11 +13,9 @@ private:
 
 public:
 
-    window();
-    ~window();
+    WindowOpenGL(int width_, int height_, const char* title_);
+    ~WindowOpenGL();
 
-    void Init(int width_, int height_, const char* title_);
-    void Destroy();
     void Update();
 
     bool IsShouldClose();

@@ -108,8 +108,8 @@ size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
     return newOffset;
 }
 
-char* MemoryArena::getPtr() {
-    return memory;
+char* MemoryArena::getPtr(size_t arenaOffset) {
+    return memory + arenaOffset;
 }
 
 void MemoryArena::free() {

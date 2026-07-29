@@ -56,7 +56,7 @@ inline void DArr<T>::push_back(const T& element) {
         resize(maxElementsCount * 2);
     }
 
-    void* ptr = arena.getPtr() + arenaOffset + (elementCount * sizeof(T));
+    void* ptr = arena.getPtr(arenaOffset + (elementCount * sizeof(T)));
     elementCount++;
 
     new(ptr) T(element); 
@@ -65,7 +65,7 @@ inline void DArr<T>::push_back(const T& element) {
 template <typename T>
 inline void DArr<T>::set(uint32_t index, const T& element) {
 
-    if(index > elementCount) {
+    if(index > maxElementsCount) {
         LOG_ERROR("DArr out of the range!");
         return;
     }
@@ -76,7 +76,7 @@ inline void DArr<T>::set(uint32_t index, const T& element) {
 
     if (index >= elementCount) {
 
-        void* ptr = arena.getPtr() + arenaOffset + (sizeof(T) * index);
+        void* ptr = arena.getPtr(arenaOffset + (sizeof(T) * index));
         elementCount++;
 
         new(ptr) T(element); 
@@ -97,14 +97,14 @@ template <typename T>
 inline void DArr<T>::delete_back() {
     if(elementCount < 1) return;
     elementCount--;
-    reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (elementCount * sizeof(T)))->~T();
+    reinterpret_cast<T*>(arena.getPtr(arenaOffset + (elementCount * sizeof(T))))->~T();
 }
 
 template <typename T>
 inline void DArr<T>::free() {
     while(elementCount > 0) {
         elementCount--;
-        reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (elementCount * sizeof(T)))->~T();
+        reinterpret_cast<T*>(arena.getPtr(arenaOffset + (elementCount * sizeof(T))))->~T();
     }
 
     arena.deallocateByOffset(arenaOffset);
@@ -113,7 +113,7 @@ inline void DArr<T>::free() {
 template <typename T>
 inline T& DArr<T>::back() {
     if(elementCount == 0) { LOG_FATAL("DArr back function has 0 element count");}
-    return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + ((elementCount - 1) * sizeof(T)));
+    return *reinterpret_cast<T*>(arena.getPtr(arenaOffset + ((elementCount - 1) * sizeof(T))));
 }
 
 template <typename T>
@@ -124,11 +124,11 @@ inline bool DArr<T>::empty() {
 template <typename T>
 inline T& DArr<T>::operator[](size_t index) {
     if(index >= maxElementsCount) { LOG_FATAL("DArr index out of the range"); }
-    return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (sizeof(T) * index));
+    return *reinterpret_cast<T*>(arena.getPtr(arenaOffset + (sizeof(T) * index)));
 }
 
 template <typename T>
 inline const T& DArr<T>::operator[](size_t index) const {
     if(index >= maxElementsCount) { LOG_FATAL("DArr index out of the range"); }
-    return *reinterpret_cast<T*>(arena.getPtr() + arenaOffset + (sizeof(T) * index));
+    return *reinterpret_cast<T*>(arena.getPtr(arenaOffset + (sizeof(T) * index)));
 }
