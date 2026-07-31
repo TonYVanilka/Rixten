@@ -1,7 +1,7 @@
 #include "core/render/openGL/ShaderProgramOpenGL.h"
 #include "utils/logger.h"
 
-ShaderProgramOpenGL::ShaderProgramOpenGL(const char* vertexSS_, const char* fragmentSS_) {
+GLuint ShaderProgramOpenGL::createShaderProg(const char* vertexSS_, const char* fragmentSS_) {
     int success;
     char infoLog[512];
 
@@ -31,7 +31,7 @@ ShaderProgramOpenGL::ShaderProgramOpenGL(const char* vertexSS_, const char* frag
     }
 
     // Link shaders with shader program
-    shaderProgramID = glCreateProgram();
+    GLuint shaderProgramID = glCreateProgram();
 
     glAttachShader(shaderProgramID, vertexShader);
     glAttachShader(shaderProgramID, fragmentShader);
@@ -45,11 +45,10 @@ ShaderProgramOpenGL::ShaderProgramOpenGL(const char* vertexSS_, const char* frag
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    return shaderProgramID;
 }
 
-ShaderProgramOpenGL::~ShaderProgramOpenGL() {
-}
-
-void ShaderProgramOpenGL::Use() {
+void ShaderProgramOpenGL::Use(GLuint shaderProgramID) {
     glUseProgram(shaderProgramID);
 }

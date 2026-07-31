@@ -22,4 +22,7 @@ public:
 
     void setSize(int width_, int height_);
     void setTitle(const char* title_);
+
+    // debug
+    GLFWwindow* GetWindowHandle() {return handle;}
 };

@@ -1,15 +1,8 @@
 #pragma once
 #include <glad/glad.h>
 
-struct ShaderProgramOpenGL {
+namespace ShaderProgramOpenGL {
 
-    GLuint shaderProgramID;
-    
-public:
-
-    ShaderProgramOpenGL(const char* vertexSS_, const char* fragmentSS_);
-    ~ShaderProgramOpenGL();
-
-    void Use();
-
+    GLuint createShaderProg(const char* vertexSS_, const char* fragmentSS_);
+    void Use(GLuint shaderProgramID);
 };

@@ -2,13 +2,10 @@
 #include <cstdint>
 
 struct Mesh {
-    uint32_t index;
 
+    uint8_t layout;
     uint32_t vbo;
     uint32_t ibo;
-    uint32_t vertexCount;
     uint32_t indexCount;
 
-    // need create material 
-    uint32_t texture;
 };

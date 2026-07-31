@@ -2,6 +2,7 @@
 #include "core/ecs/IcomponentPool.h"
 #include "core/memory/DArr.h"
 
+// refactor if need optimization
 constexpr uint32_t MinComponentsCount = MAXentities;
 
 template<typename T>
@@ -14,7 +15,6 @@ private:
     DArr<uint32_t> entitiesIndices;
 
     uint32_t componentCount;
-    uint32_t lastComponentIndex;
 
 public:
 
@@ -33,7 +33,7 @@ public:
 
 template <typename T>
 inline ComponentPool<T>::ComponentPool() : dense_components(MinComponentsCount), sparse(MAXentities), 
-    entitiesIndices(MAXentities) {
+    entitiesIndices(MAXentities), componentCount(0)  {
 
 }
 

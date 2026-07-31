@@ -91,6 +91,7 @@ inline void DArr<T>::resize(size_t newElementCount) {
     if (newElementCount == 0) LOG_WARN("Darr has 0 newElementCount to resize");
     LOG_WARN("DArr resize slot called");
     arenaOffset = arena.resizeSlot(arenaOffset, newElementCount * sizeof(T), alignof(T));
+    maxElementsCount = newElementCount;
 }
 
 template <typename T>
