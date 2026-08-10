@@ -2,6 +2,8 @@
 
 #include <glad/glad.h>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "core/render/openGL/RixtenGlfwConfig.h"
 #include "core/render/openGL/Vertex.h"
 #include "utils/logger.h"
@@ -57,7 +59,6 @@ Mesh RendererOpenGL::createMesh(
             vertLayout.attributes[i].normalize,
             vertLayout.stride,
             (void*)(offset));
-            LOG_ERROR(glGetError());
         offset += vertLayout.attributes[i].count * getTypeSize(vertLayout.attributes[i].type);
         glEnableVertexAttribArray(location);
         location++; 
@@ -83,26 +84,20 @@ Mesh RendererOpenGL::createMesh(
     return Mesh{uint8_t(VAOs.size() - 1), vbo, ebo, uint32_t(idxSize / sizeof(unsigned int))};
 }
 
-uint32_t RendererOpenGL::createVertexBuffer(const void* data, size_t size) {
-    uint32_t vbo;
+uint32_t RendererOpenGL::createMaterialUBO(MaterialData& data) {
+    if (sizeof(MaterialData) % 16 != 0) LOG_FATAL("UBO struct must be 16-byte aligned for std140");
 
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    uint32_t ubo;
 
-    return vbo;
-}
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(MaterialData), &data, GL_STATIC_DRAW);
 
-uint32_t RendererOpenGL::createIndexBuffer(const void* data, size_t size) {
-    uint32_t ebo;
+    glBindBufferBase(GL_UNIFORM_BUFFER, GlobalShaderBindings::BINDING_MATERIAL, ubo);
 
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-
-    return ebo;
+    return ubo;
 }
 
 uint32_t RendererOpenGL::createTexture(const void* data, size_t size, int width, int height, int nrChannels) {
@@ -129,32 +124,15 @@ void RendererOpenGL::frameBeing() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-void RendererOpenGL::Draw(const Mesh& mesh, const MaterialTexture& mat) {
-    glBindTexture(GL_TEXTURE_2D, mat.texture);
+void RendererOpenGL::Draw(const Mesh& mesh, const Material& mat, const glm::mat4 transform) {
+
+    if (mat.texture != 0) glBindTexture(GL_TEXTURE_2D, mat.texture);
+    glBindBuffer(GL_UNIFORM_BUFFER, mat.ubo);
 
     ShaderProgramOpenGL::Use(mat.shaderProgram);
 
-    // Получение и установка uniform-переменных
-    GLint iResolutionLoc = glGetUniformLocation(mat.shaderProgram, "iResolution");
-    GLint iTimeLoc = glGetUniformLocation(mat.shaderProgram, "iTime");
-
-    auto win = reinterpret_cast<WindowOpenGL*>(arena.getPtr(windowHandle))->GetWindowHandle();
-
-    if (iResolutionLoc != -1) {
-        // Получение размеров окна/буфера
-        int width, height;
-        // Если у вас есть доступ к окну
-        glfwGetFramebufferSize(win, &width, &height);
-        // Или используйте сохранённые значения
-        // width = screenWidth; height = screenHeight;
-        glUniform2f(iResolutionLoc, (GLfloat)width, (GLfloat)height);
-        //glUniform2f(iResolutionLoc, 400, 400);
-    }
-
-    if (iTimeLoc != -1) {
-        // Время в секундах
-        glUniform1f(iTimeLoc, (GLfloat)glfwGetTime());
-    }
+    unsigned int transformLoc = glGetUniformLocation(mat.shaderProgram, "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
     glBindVertexArray(VAOs[mesh.layout]);
     glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
@@ -181,29 +159,16 @@ uint32_t RendererOpenGL::createShader(const char* vertexShader, const char* frag
     return shaderProg;
 }
 
-uint32_t RendererOpenGL::createVAO() {
-    uint32_t vao;
-
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    
-
-    return 0;
-}
-
 void RendererOpenGL::bindShader() {
     ShaderProgramOpenGL::Use(shaderProg);
 }
 
-void RendererOpenGL::setUniform(uint32_t shaderID, const char*) {
-}
-
 GLenum RendererOpenGL::chanelToFormar(int nrChannels) {
     switch (nrChannels) {
-    case 1: return GL_RED;
-    case 3: return GL_RGB;
-    case 4: return GL_RGBA;
-    default: GL_RGB;
+        case 1: return GL_RED;
+        case 3: return GL_RGB;
+        case 4: return GL_RGBA;
+        default: return GL_RGB;
     }
 }
 

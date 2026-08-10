@@ -32,19 +32,16 @@ public:
         VertexLayout& vertLayout
     ) override;
 
-    uint32_t createVertexBuffer(const void* data, size_t size) override;
-    uint32_t createIndexBuffer(const void* data, size_t size) override;
+    uint32_t createMaterialUBO(MaterialData& data) override;
     uint32_t createTexture(const void* data, size_t size, int width, int height, int nrChannels) override;
 
     void frameBeing() override;
-    void Draw(const Mesh& mesh, const MaterialTexture& mat) override;
+    void Draw(const Mesh& mesh, const Material& mat, const glm::mat4 transform) override;
     void frameEnd() override;
     void Clear() override;
     void createWindow(int width_, int height_, const char* title_) override;
 
     uint32_t createLayout(uint32_t count);
     uint32_t createShader(const char* vertexShader, const char* fragmentShader) override;
-    uint32_t createVAO();
     void bindShader() override;
-    void setUniform(uint32_t shaderID, const char*) override;  // need refactor
 };

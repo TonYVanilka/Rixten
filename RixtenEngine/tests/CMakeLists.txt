@@ -59,6 +59,9 @@ target_include_directories(${CMAKE_PROJECT_NAME}  PRIVATE ${ABOVE_DIR}/external/
 target_link_libraries(${CMAKE_PROJECT_NAME}  PRIVATE glad)
 target_include_directories(${CMAKE_PROJECT_NAME}  PRIVATE ${ABOVE_DIR}/external/glad/include)
 
+# Glm
+target_include_directories(RixtenTests PRIVATE ${ABOVE_DIR}/external/glm)
+
 # GLFW
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
