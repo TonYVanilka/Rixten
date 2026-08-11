@@ -9,7 +9,7 @@
 #include "utils/logger.h"
 
 RendererOpenGL::RendererOpenGL() : arena(MemoryArena::GetInstance()), 
-    windowHandle(0), VAOs(2) /*refactor in future*/, shaderProg(0) {
+    windowHandle(0), VAOs(1) /*refactor in future*/, shaderProg(0), currentCamera(nullptr) {
 }
 
 RendererOpenGL::~RendererOpenGL() {
@@ -59,9 +59,20 @@ Mesh RendererOpenGL::createMesh(
             vertLayout.attributes[i].normalize,
             vertLayout.stride,
             (void*)(offset));
+            LOG_ERROR(glGetError());
         offset += vertLayout.attributes[i].count * getTypeSize(vertLayout.attributes[i].type);
         glEnableVertexAttribArray(location);
         location++; 
+    }
+
+    for (int i = 0; i < vertLayout.attributeCount; i++) {
+        GLint enabled, size, stride;
+        void* ptr;
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_SIZE, &size);
+        glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &stride);
+        glGetVertexAttribPointerv(i, GL_VERTEX_ATTRIB_ARRAY_POINTER, &ptr);
+        LOG_DEBUG("attrib ", i, " enabled= ", enabled, " size= ", size, " stride= ", stride, " offset= ", ptr);
     }
 
     // // 0: position (vec3)
@@ -84,6 +95,10 @@ Mesh RendererOpenGL::createMesh(
     return Mesh{uint8_t(VAOs.size() - 1), vbo, ebo, uint32_t(idxSize / sizeof(unsigned int))};
 }
 
+void RendererOpenGL::setCamera(Camera* camera) {
+    currentCamera = camera;
+}
+
 uint32_t RendererOpenGL::createMaterialUBO(MaterialData& data) {
     if (sizeof(MaterialData) % 16 != 0) LOG_FATAL("UBO struct must be 16-byte aligned for std140");
 
@@ -100,7 +115,7 @@ uint32_t RendererOpenGL::createMaterialUBO(MaterialData& data) {
     return ubo;
 }
 
-uint32_t RendererOpenGL::createTexture(const void* data, size_t size, int width, int height, int nrChannels) {
+uint32_t RendererOpenGL::createTexture(const void* data, int width, int height, int nrChannels) {
     unsigned int texture;
     
     glGenTextures(1, &texture);
@@ -131,8 +146,16 @@ void RendererOpenGL::Draw(const Mesh& mesh, const Material& mat, const glm::mat4
 
     ShaderProgramOpenGL::Use(mat.shaderProgram);
 
-    unsigned int transformLoc = glGetUniformLocation(mat.shaderProgram, "transform");
-    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+    // REFACTOR IN FUTURE
+    unsigned int model = glGetUniformLocation(mat.shaderProgram, "model");
+    glUniformMatrix4fv(model, 1, GL_FALSE, glm::value_ptr(transform));
+
+    unsigned int projection = glGetUniformLocation(mat.shaderProgram, "projection");
+    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(currentCamera->GetProjection()));
+
+    unsigned int view = glGetUniformLocation(mat.shaderProgram, "view");
+    glUniformMatrix4fv(view, 1, GL_FALSE, glm::value_ptr(currentCamera->GetViewMatrix()));
+    // REFACTOR IN FUTURE
 
     glBindVertexArray(VAOs[mesh.layout]);
     glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
@@ -142,12 +165,13 @@ void RendererOpenGL::frameEnd() {
     reinterpret_cast<WindowOpenGL*>(arena.getPtr(windowHandle))->Update();
 }
 
-void RendererOpenGL::Clear() {
-}
-
 void RendererOpenGL::createWindow(int width_, int height_, const char* title_) {
     windowHandle = arena.allocate(sizeof(WindowOpenGL), alignof(WindowOpenGL));
     new(arena.getPtr(windowHandle)) WindowOpenGL(width_, height_, title_);
+
+    //DEBUG!!!
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) LOG_FATAL("Failed to initialize GLAD");
+    glEnable(GL_DEPTH_TEST);
 }
 
 uint32_t RendererOpenGL::createLayout(uint32_t count) {

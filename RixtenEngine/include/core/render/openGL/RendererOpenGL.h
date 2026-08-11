@@ -11,6 +11,7 @@ class RendererOpenGL : public IRenderApi {
     size_t windowHandle;
     MemoryArena& arena;
     uint32_t shaderProg;
+    Camera* currentCamera;
     
     // vertex layout
     DArr<uint32_t> VAOs;
@@ -32,13 +33,14 @@ public:
         VertexLayout& vertLayout
     ) override;
 
+    void setCamera(Camera* camera) override;
+
     uint32_t createMaterialUBO(MaterialData& data) override;
-    uint32_t createTexture(const void* data, size_t size, int width, int height, int nrChannels) override;
+    uint32_t createTexture(const void* data, int width, int height, int nrChannels) override;
 
     void frameBeing() override;
     void Draw(const Mesh& mesh, const Material& mat, const glm::mat4 transform) override;
     void frameEnd() override;
-    void Clear() override;
     void createWindow(int width_, int height_, const char* title_) override;
 
     uint32_t createLayout(uint32_t count);
