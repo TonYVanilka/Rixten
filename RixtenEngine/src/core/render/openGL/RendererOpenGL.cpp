@@ -4,28 +4,25 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "core/render/openGL/RixtenGlfwConfig.h"
 #include "core/render/openGL/Vertex.h"
 #include "utils/logger.h"
 
-RendererOpenGL::RendererOpenGL() : arena(MemoryArena::GetInstance()), 
-    windowHandle(0), VAOs(1) /*refactor in future*/, shaderProg(0), currentCamera(nullptr) {
+RendererOpenGL::RendererOpenGL() : VAOs(1) /*refactor in future*/ {
 }
 
 RendererOpenGL::~RendererOpenGL() {
     Destroy();
-    RixtenGlfwConfig::terminate();
 }
 
 bool RendererOpenGL::Init() {
-    RixtenGlfwConfig::init();
     return true;
 }
 
 void RendererOpenGL::Destroy() {
+}
 
-    reinterpret_cast<WindowOpenGL*>(arena.getPtr(windowHandle))->~WindowOpenGL();
-    arena.deallocateByOffset(windowHandle);
+void RendererOpenGL::setCamera(Camera& camera) {
+    //currentCamera = camera;
 }
 
 Mesh RendererOpenGL::createMesh(
@@ -59,12 +56,13 @@ Mesh RendererOpenGL::createMesh(
             vertLayout.attributes[i].normalize,
             vertLayout.stride,
             (void*)(offset));
-            LOG_ERROR(glGetError());
+        LOG_ERROR(glGetError());
         offset += vertLayout.attributes[i].count * getTypeSize(vertLayout.attributes[i].type);
         glEnableVertexAttribArray(location);
         location++; 
     }
 
+    // debug
     for (int i = 0; i < vertLayout.attributeCount; i++) {
         GLint enabled, size, stride;
         void* ptr;
@@ -72,7 +70,7 @@ Mesh RendererOpenGL::createMesh(
         glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_SIZE, &size);
         glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_STRIDE, &stride);
         glGetVertexAttribPointerv(i, GL_VERTEX_ATTRIB_ARRAY_POINTER, &ptr);
-        LOG_DEBUG("attrib ", i, " enabled= ", enabled, " size= ", size, " stride= ", stride, " offset= ", ptr);
+        LOG_DEBUG("attrib ", i, " enabled=", enabled, " size=", size, " stride=", stride, " offset=", ptr);
     }
 
     // // 0: position (vec3)
@@ -93,10 +91,6 @@ Mesh RendererOpenGL::createMesh(
     VAOs.push_back(vao);
 
     return Mesh{uint8_t(VAOs.size() - 1), vbo, ebo, uint32_t(idxSize / sizeof(unsigned int))};
-}
-
-void RendererOpenGL::setCamera(Camera* camera) {
-    currentCamera = camera;
 }
 
 uint32_t RendererOpenGL::createMaterialUBO(MaterialData& data) {
@@ -134,57 +128,87 @@ uint32_t RendererOpenGL::createTexture(const void* data, int width, int height, 
     return texture;
 }
 
+uint32_t RendererOpenGL::createShader(const char* vertexSS_, const char* fragmentSS_) {
+    int success;
+    char infoLog[512];
+
+    // compile Shaders
+    GLuint vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
+
+    glShaderSource(vertexShader, 1, &vertexSS_, NULL);
+    glCompileShader(vertexShader);
+
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        LOG_ERROR("Failed to compile vertex shader: ", infoLog);
+    }
+
+    GLuint fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(fragmentShader, 1, &fragmentSS_, NULL);
+    glCompileShader(fragmentShader);
+
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        LOG_ERROR("Failed to compile fragment shader: ", infoLog);
+    }
+
+    // Link shaders with shader program
+    GLuint shaderProgramID = glCreateProgram();
+
+    glAttachShader(shaderProgramID, vertexShader);
+    glAttachShader(shaderProgramID, fragmentShader);
+    glLinkProgram(shaderProgramID);
+
+    glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &success);
+    if (!success) {
+        glGetProgramInfoLog(shaderProgramID, 512, NULL, infoLog);
+        LOG_ERROR("Failed to compile shader program: ", infoLog);
+    }
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    return shaderProgramID;
+}
+
 void RendererOpenGL::frameBeing() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-void RendererOpenGL::Draw(const Mesh& mesh, const Material& mat, const glm::mat4 transform) {
+void RendererOpenGL::Draw(
+    const Mesh& mesh,
+    const Material& mat,
+    const glm::mat4 transform,
+    const Camera& camera 
+) {
 
     if (mat.texture != 0) glBindTexture(GL_TEXTURE_2D, mat.texture);
     glBindBuffer(GL_UNIFORM_BUFFER, mat.ubo);
 
-    ShaderProgramOpenGL::Use(mat.shaderProgram);
+    glUseProgram(mat.shaderProgram);
 
     // REFACTOR IN FUTURE
     unsigned int model = glGetUniformLocation(mat.shaderProgram, "model");
     glUniformMatrix4fv(model, 1, GL_FALSE, glm::value_ptr(transform));
-
+    
+    //debug 
+    glm::mat4 projectionM = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     unsigned int projection = glGetUniformLocation(mat.shaderProgram, "projection");
-    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(currentCamera->GetProjection()));
+    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(projectionM));
 
+    glm::mat4 viewM = glm::lookAt(camera.cameraPos, camera.cameraPos + camera.cameraFront, camera.cameraUp);
     unsigned int view = glGetUniformLocation(mat.shaderProgram, "view");
-    glUniformMatrix4fv(view, 1, GL_FALSE, glm::value_ptr(currentCamera->GetViewMatrix()));
+    glUniformMatrix4fv(view, 1, GL_FALSE, glm::value_ptr(viewM));
     // REFACTOR IN FUTURE
 
     glBindVertexArray(VAOs[mesh.layout]);
     glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
-}
-
-void RendererOpenGL::frameEnd() {
-    reinterpret_cast<WindowOpenGL*>(arena.getPtr(windowHandle))->Update();
-}
-
-void RendererOpenGL::createWindow(int width_, int height_, const char* title_) {
-    windowHandle = arena.allocate(sizeof(WindowOpenGL), alignof(WindowOpenGL));
-    new(arena.getPtr(windowHandle)) WindowOpenGL(width_, height_, title_);
-
-    //DEBUG!!!
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) LOG_FATAL("Failed to initialize GLAD");
-    glEnable(GL_DEPTH_TEST);
-}
-
-uint32_t RendererOpenGL::createLayout(uint32_t count) {
-    return 0;
-}
-
-uint32_t RendererOpenGL::createShader(const char* vertexShader, const char* fragmentShader) {
-    shaderProg = ShaderProgramOpenGL::createShaderProg(vertexShader, fragmentShader);
-    return shaderProg;
-}
-
-void RendererOpenGL::bindShader() {
-    ShaderProgramOpenGL::Use(shaderProg);
 }
 
 GLenum RendererOpenGL::chanelToFormar(int nrChannels) {

@@ -27,7 +27,7 @@ public:
     void removeEntity(Entity handle);
 
     template <typename T>
-    size_t createPool();
+    size_t createPool(uint16_t componentCount = MAXentities);
     template <typename T>
     ComponentPool<T>* getPool();
 
@@ -42,11 +42,11 @@ public:
 };
 
 template <typename T>
-inline size_t EcsManager::createPool() {
+inline size_t EcsManager::createPool(uint16_t componentCount) {
     size_t indx = typeIDgenerator::id<T>();
 
     size_t arenaOffset = arena.allocate(sizeof(ComponentPool<T>), alignof(ComponentPool<T>));
-    new(arena.getPtr(arenaOffset)) ComponentPool<T>();
+    new(arena.getPtr(arenaOffset)) ComponentPool<T>(componentCount);
     pools.set(indx, arenaOffset);
 
     return indx;

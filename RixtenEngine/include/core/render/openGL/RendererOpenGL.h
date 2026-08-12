@@ -1,19 +1,13 @@
 #pragma once
-#include "core/memory/MemoryArena.h"
 #include "core/memory/DArr.h"
 #include "core/render/IRenderApi.h"
-#include "core/render/openGL/WindowOpenGL.h"
 #include "core/render/openGL/ShaderProgramOpenGL.h"
 #include "core/render/Mesh.h"
 
 class RendererOpenGL : public IRenderApi {
 
-    size_t windowHandle;
-    MemoryArena& arena;
-    uint32_t shaderProg;
-    Camera* currentCamera;
-    
     // vertex layout
+    // in future has sence emplace it at resource system
     DArr<uint32_t> VAOs;
 
     GLenum chanelToFormar(int nrChannels);
@@ -27,23 +21,23 @@ public:
     bool Init() override;
     void Destroy() override;
 
+    void setCamera(Camera& camera) override;
+
     Mesh createMesh(
         const void* vertices, size_t vertSize, 
         const void* indices, size_t idxSize,
         VertexLayout& vertLayout
     ) override;
 
-    void setCamera(Camera* camera) override;
-
     uint32_t createMaterialUBO(MaterialData& data) override;
     uint32_t createTexture(const void* data, int width, int height, int nrChannels) override;
+    uint32_t createShader(const char* vertexSS_, const char* fragmentSS_);
 
     void frameBeing() override;
-    void Draw(const Mesh& mesh, const Material& mat, const glm::mat4 transform) override;
-    void frameEnd() override;
-    void createWindow(int width_, int height_, const char* title_) override;
-
-    uint32_t createLayout(uint32_t count);
-    uint32_t createShader(const char* vertexShader, const char* fragmentShader) override;
-    void bindShader() override;
+    void Draw(
+        const Mesh& mesh,
+        const Material& mat,
+        const glm::mat4 transform,
+        const Camera& camera 
+    ) override;
 };

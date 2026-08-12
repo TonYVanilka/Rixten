@@ -17,7 +17,11 @@ MemoryArena::~MemoryArena() {
 }
 
 size_t MemoryArena::allocate(size_t size, uint8_t align) {
-    
+    if (size == 0) {
+        LOG_FATAL("GLOBAL ARENA ALLOCATE SIZE 0");
+        return 0;
+    }
+
     size_t totalSize = (current + sizeof(SlotHeader) + size);
     
     if (totalSize > MemorySize) {

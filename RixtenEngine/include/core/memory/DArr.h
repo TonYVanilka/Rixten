@@ -41,6 +41,9 @@ public:
 template <typename T>
 inline DArr<T>::DArr(size_t maxElementsCount_) : maxElementsCount(maxElementsCount_),
     elementCount(0), arena(MemoryArena::GetInstance()) {
+    if (maxElementsCount == 0) {
+        LOG_WARN("DArr created with 0 capacity");
+    }
     arenaOffset = arena.allocate(sizeof(T) * maxElementsCount, alignof(T));
 }
 
@@ -53,7 +56,7 @@ template <typename T>
 inline void DArr<T>::push_back(const T& element) {
     
     if(elementCount + 1 > maxElementsCount) {
-        resize(maxElementsCount * 2);
+        resize(maxElementsCount == 0 ? 4 : maxElementsCount * 2);
     }
 
     void* ptr = arena.getPtr(arenaOffset + (elementCount * sizeof(T)));
@@ -71,7 +74,7 @@ inline void DArr<T>::set(uint32_t index, const T& element) {
     }
 
     if(elementCount > maxElementsCount) {
-        resize(maxElementsCount * 2);
+        resize(maxElementsCount == 0 ? 4 : maxElementsCount * 2);
     }
 
     if (index >= elementCount) {

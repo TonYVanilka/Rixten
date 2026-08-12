@@ -48,7 +48,3 @@ GLuint ShaderProgramOpenGL::createShaderProg(const char* vertexSS_, const char* 
 
     return shaderProgramID;
 }
-
-void ShaderProgramOpenGL::Use(GLuint shaderProgramID) {
-    glUseProgram(shaderProgramID);
-}

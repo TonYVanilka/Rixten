@@ -9,6 +9,10 @@
 #include "core/render/openGL/RendererOpenGL.h"
 #include "core/render/openGL/Vertex.h"
 #include "utils/logger.h"
+#include "core/platform/PlatformGLFW.h"
+#include "core/render/Camera.h"
+
+#include "core/MovementSystem.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <core/resourceManager/stb_image.h>
@@ -196,59 +200,97 @@ Camera* camera;
 uint32_t createTexture(const char* path);
 
 int main() {
+
+    // just like in future init in RixtenRoot
     MemoryArena& arena = MemoryArena::GetInstance();
-
+    
     EcsManager ecs;
+    
+    InputState inputState = {};
 
+    Entity singltone = ecs.createEntity();
+
+    ecs.createPool<InputState>(1);
+    ecs.createComponent<InputState>(singltone, inputState);
+    ecs.createPool<ActiveCamera>(1);
+    
+    PlatformGLFW platform;
+    platform.Init(800, 600, "Rixten GLFW window", ecs.getComponent<InputState>(singltone));
+
+    Camera cameraComponent = {
+        glm::vec3(0.0f, 0.0f, 3.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    };
+
+    Camera cameraComponent1 = {
+        glm::vec3(0.0f, 0.0f, 5.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    };
+
+    ecs.createPool<Camera>();
+    Entity camera = ecs.createEntity();
+    ecs.createComponent<Camera>(camera, cameraComponent);
+
+    Entity camera1 = ecs.createEntity();
+    ecs.createComponent<Camera>(camera1, cameraComponent1);
+
+    ActiveCamera aCamera = {camera};
+
+    //Camera camera(glm::vec3(0.0f, 0.0f, 2.0f));
+    ecs.createComponent<ActiveCamera>(singltone, aCamera);
+    
     #ifdef VULCAN_API
-        renderer = nullptr
-        #error Doesn't support vulcan
+    renderer = nullptr
+    #error Doesn't support vulcan
     #else
-        camera = new(arena.getPtr(arena.allocate(sizeof(Camera), alignof(Camera)))) 
-        Camera(glm::vec3(0.0f, 0.0f, 3.0f));
-        renderer = new(arena.getPtr(arena.allocate(sizeof(RendererOpenGL), alignof(RendererOpenGL))))
-        RendererOpenGL();
-        renderer->setCamera(camera);
+    renderer = new(arena.getPtr(arena.allocate(sizeof(RendererOpenGL), alignof(RendererOpenGL))))
+    RendererOpenGL();
     #endif
-
+    
     // create transformations
     glm::mat4 transform = glm::mat4(1.0f);  // make sure to initialize matrix to identity matrix first
     transform = glm::rotate(transform, glm::radians(20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-
-    renderer->Init();
-
-    MaterialData matData{1.0f, 0.0, 1.0, true};
     
-    renderer->createWindow(800, 600, "Test Rixten Window");
-
+    
+    renderer->Init();
+    
+    MaterialData matData{1.0f, 0.0, 1.0, true};
     Material simpleMat {
         renderer->createShader(vertexShaderSource1, fragmentShaderSource1),
-        createTexture("{47B42AFB-E60D-48DB-A8FA-DD38B4C06C89}.png"),
+        createTexture("bresenham4.png"),
         renderer->createMaterialUBO(matData)
     };
-
-    RenderSystem renderSys(renderer);
-
+    
+    
+    RenderSystem renderSys(renderer, &platform);
+    MovementSystem myvSys;
+    
     ecs.createPool<Mesh>();
     ecs.createPool<Material>();
     ecs.createPool<glm::mat4>();
+
     ecs.RegisterSystem(renderSys);
+    ecs.RegisterSystem(myvSys);
 
     Entity simple = ecs.createEntity();
-
+    
     VertexLayout vl;
     vl.attributeCount = 2;
     vl.attributes[0] = {0, static_cast<uint32_t>(GL_FLOAT), 3, false};
     vl.attributes[1] = {0, static_cast<uint32_t>(GL_FLOAT), 2, false};
     vl.stride = sizeof(Vertex);
-
+    
     Mesh square = renderer->createMesh(verticesC, sizeof(verticesC), indicesC, sizeof(indicesC), vl);
-    LOG_DEBUG(glGetError());
     ecs.createComponent<Mesh>(simple, square);
     ecs.createComponent<Material>(simple, simpleMat);
     ecs.createComponent<glm::mat4>(simple, transform);
 
+    ecs.getComponent<ActiveCamera>(singltone)->entityId = camera1;
+
     while (true) {
+        platform.poolEvent();
         ecs.Update();
     }
 }
