@@ -207,12 +207,14 @@ int main() {
     EcsManager ecs;
     
     InputState inputState = {};
+    inputState.mouseDeltaX = 400; // center of screen
+    inputState.mouseDeltaY = 300; // need get from screen size
 
     Entity singltone = ecs.createEntity();
 
-    ecs.createPool<InputState>(1);
+    ecs.createPool<InputState>(1, 1);
     ecs.createComponent<InputState>(singltone, inputState);
-    ecs.createPool<ActiveCamera>(1);
+    ecs.createPool<ActiveCamera>(1, 1);
     
     PlatformGLFW platform;
     platform.Init(800, 600, "Rixten GLFW window", ecs.getComponent<InputState>(singltone));
@@ -220,21 +222,15 @@ int main() {
     Camera cameraComponent = {
         glm::vec3(0.0f, 0.0f, 3.0f),
         glm::vec3(0.0f, 0.0f, -1.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
-    };
-
-    Camera cameraComponent1 = {
-        glm::vec3(0.0f, 0.0f, 5.0f),
-        glm::vec3(0.0f, 0.0f, -1.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f)
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        -90.0f,
+        0.0f,
+        true
     };
 
     ecs.createPool<Camera>();
     Entity camera = ecs.createEntity();
     ecs.createComponent<Camera>(camera, cameraComponent);
-
-    Entity camera1 = ecs.createEntity();
-    ecs.createComponent<Camera>(camera1, cameraComponent1);
 
     ActiveCamera aCamera = {camera};
 
@@ -242,17 +238,16 @@ int main() {
     ecs.createComponent<ActiveCamera>(singltone, aCamera);
     
     #ifdef VULCAN_API
-    renderer = nullptr
-    #error Doesn't support vulcan
+        renderer = nullptr
+        #error Doesn't support vulcan
     #else
-    renderer = new(arena.getPtr(arena.allocate(sizeof(RendererOpenGL), alignof(RendererOpenGL))))
-    RendererOpenGL();
+        renderer = new(arena.getPtr(arena.allocate(sizeof(RendererOpenGL), alignof(RendererOpenGL))))
+        RendererOpenGL();
     #endif
     
     // create transformations
     glm::mat4 transform = glm::mat4(1.0f);  // make sure to initialize matrix to identity matrix first
     transform = glm::rotate(transform, glm::radians(20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
-    
     
     renderer->Init();
     
@@ -262,7 +257,6 @@ int main() {
         createTexture("bresenham4.png"),
         renderer->createMaterialUBO(matData)
     };
-    
     
     RenderSystem renderSys(renderer, &platform);
     MovementSystem myvSys;
@@ -287,11 +281,16 @@ int main() {
     ecs.createComponent<Material>(simple, simpleMat);
     ecs.createComponent<glm::mat4>(simple, transform);
 
-    ecs.getComponent<ActiveCamera>(singltone)->entityId = camera1;
+    float deltaTime = 0.0f;  // Time between current frame and last frame
+    float lastFrame = 0.0f;  // Time of last frame
 
+    
     while (true) {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
         platform.poolEvent();
-        ecs.Update();
+        ecs.Update(deltaTime);
     }
 }
 

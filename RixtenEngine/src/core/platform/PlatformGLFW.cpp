@@ -52,6 +52,9 @@ void PlatformGLFW::Init(int width_, int height_, const char* title_, InputState*
     
     glfwSetWindowUserPointer(windowHandle, this);
     glfwSetKeyCallback(windowHandle, KeyCallback);
+    glfwSetCursorPosCallback(windowHandle, CursorPosCallback);
+
+    glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // configure global opengl state
     // -----------------------------

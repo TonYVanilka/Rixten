@@ -6,9 +6,9 @@ EcsManager::EcsManager() : pools(8), systems(8), arena(MemoryArena::GetInstance(
 EcsManager::~EcsManager() {
 }
 
-void EcsManager::Update() {
+void EcsManager::Update(float deltaTime) {
     for(int i = 0; i < systems.size(); i++) {
-        systems[i]->Update(*this, 0.0f); // need add dt
+        systems[i]->Update(*this, deltaTime);  // need add dt
     }
 }
 

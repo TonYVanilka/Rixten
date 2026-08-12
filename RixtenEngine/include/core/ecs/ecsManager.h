@@ -21,13 +21,14 @@ public:
     EcsManager();
     ~EcsManager();
 
-    void Update();
+    void Update(float deltaTime);
 
     Entity createEntity();
     void removeEntity(Entity handle);
 
     template <typename T>
-    size_t createPool(uint16_t componentCount = MAXentities);
+    size_t createPool(uint16_t componentCount = MAXentities, 
+        uint16_t spraceMinComponentCount = MAXentities);
     template <typename T>
     ComponentPool<T>* getPool();
 
@@ -42,7 +43,7 @@ public:
 };
 
 template <typename T>
-inline size_t EcsManager::createPool(uint16_t componentCount) {
+inline size_t EcsManager::createPool(uint16_t componentCount, uint16_t spraceMinComponentCount) {
     size_t indx = typeIDgenerator::id<T>();
 
     size_t arenaOffset = arena.allocate(sizeof(ComponentPool<T>), alignof(ComponentPool<T>));

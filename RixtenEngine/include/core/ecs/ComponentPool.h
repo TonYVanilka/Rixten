@@ -18,7 +18,8 @@ private:
 
 public:
 
-    ComponentPool(uint16_t componentCount = MinComponentsCount);
+    ComponentPool(uint16_t componentCount = MinComponentsCount, 
+        uint16_t spraceMinComponentCount = MAXentities);
     ~ComponentPool();
 
     void addComponent(const Entity& handle, const T& component);
@@ -32,9 +33,8 @@ public:
 };
 
 template <typename T>
-inline ComponentPool<T>::ComponentPool(uint16_t componentCount) : dense_components(componentCount), sparse(MAXentities), 
-    entitiesIndices(componentCount), componentCount(0)  {
-
+inline ComponentPool<T>::ComponentPool(uint16_t componentCount, uint16_t spraceMinComponentCount) : 
+    dense_components(componentCount), sparse(MAXentities), entitiesIndices(componentCount), componentCount(0) {
 }
 
 template <typename T>
