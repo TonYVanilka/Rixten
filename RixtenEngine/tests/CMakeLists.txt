@@ -26,9 +26,7 @@ set(Utils
     ${ABOVE_DIR}/include/utils/logger.h
 
     ${ABOVE_DIR}src/core/platform/PLatformGLFW.cpp
-    ${ABOVE_DIR}src/core/render/openGL/RixtenGlfwConfig.cpp
     ${ABOVE_DIR}src/core/render/openGL/RendererOpenGL.cpp
-    ${ABOVE_DIR}src/core/render/openGL/ShaderProgramOpenGL.cpp
     ${ABOVE_DIR}src/core/render/RenderSystem.cpp
 
     ${ABOVE_DIR}include/core/resourceManager/stb_image.h

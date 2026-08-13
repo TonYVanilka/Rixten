@@ -7,8 +7,8 @@
 #include "core/memory/MemoryArena.h"
 #include "core/render/RenderSystem.h"
 #include "core/render/openGL/RendererOpenGL.h"
-#include "core/render/openGL/Vertex.h"
 #include "utils/logger.h"
+#include "core/render/Vertex.h"
 #include "core/platform/PlatformGLFW.h"
 #include "core/render/Camera.h"
 
@@ -21,6 +21,7 @@ const char* vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec2 aTexCoord;\n"
+    "layout (location = 2) in vec3 aNormals;\n"
     "out vec2 TexCoord;\n"
     "void main()\n"
     "{\n"
@@ -207,18 +208,18 @@ int main() {
     EcsManager ecs;
     
     InputState inputState = {};
-    inputState.mouseDeltaX = 400; // center of screen
-    inputState.mouseDeltaY = 300; // need get from screen size
+    inputState.width = 800;
+    inputState.height = 600;
 
     Entity singltone = ecs.createEntity();
-
+    
     ecs.createPool<InputState>(1, 1);
     ecs.createComponent<InputState>(singltone, inputState);
     ecs.createPool<ActiveCamera>(1, 1);
     
     PlatformGLFW platform;
     platform.Init(800, 600, "Rixten GLFW window", ecs.getComponent<InputState>(singltone));
-
+    
     Camera cameraComponent = {
         glm::vec3(0.0f, 0.0f, 3.0f),
         glm::vec3(0.0f, 0.0f, -1.0f),
@@ -247,7 +248,7 @@ int main() {
     
     // create transformations
     glm::mat4 transform = glm::mat4(1.0f);  // make sure to initialize matrix to identity matrix first
-    transform = glm::rotate(transform, glm::radians(20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
+    //transform = glm::rotate(transform, glm::radians(20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
     
     renderer->Init();
     
@@ -274,6 +275,7 @@ int main() {
     vl.attributeCount = 2;
     vl.attributes[0] = {0, static_cast<uint32_t>(GL_FLOAT), 3, false};
     vl.attributes[1] = {0, static_cast<uint32_t>(GL_FLOAT), 2, false};
+    //vl.attributes[2] = {0, static_cast<uint32_t>(GL_FLOAT), 3, false};
     vl.stride = sizeof(Vertex);
     
     Mesh square = renderer->createMesh(verticesC, sizeof(verticesC), indicesC, sizeof(indicesC), vl);
@@ -284,11 +286,31 @@ int main() {
     float deltaTime = 0.0f;  // Time between current frame and last frame
     float lastFrame = 0.0f;  // Time of last frame
 
-    
+    float fps = 0.0f;
+    int frameCount = 0;
+    float timeAccumulator = 0.0f;
+
     while (true) {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        frameCount++;
+        timeAccumulator += deltaTime;
+
+        // // Если прошла 1 секунда (или чуть больше)
+        // if (timeAccumulator >= 1.0f) {
+        //     // Запоминаем FPS
+        //     fps = (float)frameCount / timeAccumulator;
+
+        //     // Сбрасываем счетчики для следующей секунды
+        //     frameCount = 0;
+        //     timeAccumulator = 0.0f;
+
+        //     // Теперь переменная 'fps' стабильна и ее можно вывести
+        //     LOG_DEBUG("FPS: ", fps);
+        // }
+
         platform.poolEvent();
         ecs.Update(deltaTime);
     }

@@ -19,9 +19,18 @@ void PlatformGLFW::CursorPosCallback(GLFWwindow* window, double xpos, double ypo
 
     self->inputState->mouseX = xpos;
     self->inputState->mouseY = ypos;
+    self->inputState->UseMouse = true;
 }
 
 void PlatformGLFW::ScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+}
+
+void PlatformGLFW::FrameBufferSizeCallback(GLFWwindow* window, int width, int height) {
+    auto* self = static_cast<PlatformGLFW*>(glfwGetWindowUserPointer(window));
+
+    self->inputState->width = width;
+    self->inputState->height = height;
+    LOG_DEBUG(self->inputState->width, ' ', self->inputState->height);
 }
 
 PlatformGLFW::PlatformGLFW() : windowHandle(nullptr), inputState(nullptr) {
@@ -53,7 +62,9 @@ void PlatformGLFW::Init(int width_, int height_, const char* title_, InputState*
     glfwSetWindowUserPointer(windowHandle, this);
     glfwSetKeyCallback(windowHandle, KeyCallback);
     glfwSetCursorPosCallback(windowHandle, CursorPosCallback);
+    glfwSetFramebufferSizeCallback(windowHandle, FrameBufferSizeCallback);
 
+    //glfwSwapInterval(0);
     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // configure global opengl state

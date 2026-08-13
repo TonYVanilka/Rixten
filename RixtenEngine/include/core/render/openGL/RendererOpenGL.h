@@ -1,8 +1,8 @@
 #pragma once
 #include "core/memory/DArr.h"
 #include "core/render/IRenderApi.h"
-#include "core/render/openGL/ShaderProgramOpenGL.h"
 #include "core/render/Mesh.h"
+#include <glad/glad.h>
 
 class RendererOpenGL : public IRenderApi {
 
@@ -21,7 +21,7 @@ public:
     bool Init() override;
     void Destroy() override;
 
-    void setCamera(Camera& camera) override;
+    void setViewportSize(int width, int height) override;
 
     Mesh createMesh(
         const void* vertices, size_t vertSize, 

@@ -14,7 +14,7 @@ public:
     virtual bool Init() = 0;
     virtual void Destroy() = 0;
 
-    virtual void setCamera(Camera& camera) = 0;
+    virtual void setViewportSize(int width, int height) = 0;
 
     virtual Mesh createMesh(
         const void* vertices, size_t vertSize, 

@@ -1,10 +1,7 @@
 #include "core/render/openGL/RendererOpenGL.h"
 
-#include <glad/glad.h>
-
 #include <glm/gtc/type_ptr.hpp>
 
-#include "core/render/openGL/Vertex.h"
 #include "utils/logger.h"
 
 RendererOpenGL::RendererOpenGL() : VAOs(1) /*refactor in future*/ {
@@ -21,8 +18,8 @@ bool RendererOpenGL::Init() {
 void RendererOpenGL::Destroy() {
 }
 
-void RendererOpenGL::setCamera(Camera& camera) {
-    //currentCamera = camera;
+void RendererOpenGL::setViewportSize(int width, int height) {
+    glViewport(0, 0, width, height);
 }
 
 Mesh RendererOpenGL::createMesh(
