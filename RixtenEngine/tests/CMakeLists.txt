@@ -30,6 +30,11 @@ set(Utils
     ${ABOVE_DIR}src/core/render/RenderSystem.cpp
 
     ${ABOVE_DIR}include/core/resourceManager/stb_image.h
+    ${ABOVE_DIR}src/core/resourceManager/cgltf.cpp
+    ${ABOVE_DIR}src/core/resourceManager/resources/TextureResource.cpp
+    ${ABOVE_DIR}src/core/resourceManager/resources/ModelResource.cpp
+    ${ABOVE_DIR}src/core/resourceManager/ResourceManager.cpp
+
     ${ABOVE_DIR}src/core/MovementSystem.cpp
 )
 
@@ -66,7 +71,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(../external/glfw ../build/glfw)	
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE glfw)

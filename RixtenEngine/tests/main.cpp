@@ -3,16 +3,18 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "core/MovementSystem.h"
 #include "core/ecs/EcsManager.h"
 #include "core/memory/MemoryArena.h"
-#include "core/render/RenderSystem.h"
-#include "core/render/openGL/RendererOpenGL.h"
-#include "utils/logger.h"
-#include "core/render/Vertex.h"
 #include "core/platform/PlatformGLFW.h"
 #include "core/render/Camera.h"
-
-#include "core/MovementSystem.h"
+#include "core/render/RenderSystem.h"
+#include "core/render/Vertex.h"
+#include "core/render/openGL/RendererOpenGL.h"
+#include "core/resourceManager/ResourceManager.h"
+#include "core/resourceManager/resources/TextureResource.h"
+#include "core/resourceManager/resources/ModelResource.h"
+#include "utils/logger.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <core/resourceManager/stb_image.h>
@@ -20,8 +22,8 @@
 const char* vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec2 aTexCoord;\n"
-    "layout (location = 2) in vec3 aNormals;\n"
+    "layout (location = 1) in vec3 aNormals;\n"
+    "layout (location = 2) in vec2 aTexCoord;\n"
     "out vec2 TexCoord;\n"
     "void main()\n"
     "{\n"
@@ -41,7 +43,8 @@ const char* fragmentShaderSource =
 const char* vertexShaderSource1 =
     "#version 420 core\n"
     "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec2 aTexCoord;\n"
+    "layout (location = 1) in vec3 aNormals;\n"
+    "layout (location = 2) in vec2 aTexCoord;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n"
     "uniform mat4 model;\n"
@@ -68,8 +71,10 @@ const char* fragmentShaderSource1 =
     "void main()\n"
     "{\n"
     "    if (material.useTexture != 0) {\n"
-    "        FragColor = texture(ourTexture, TexCoord);\n"
-    "        //FragColor = vec4(TexCoord, 0.0, 1.0);\n"
+    "        vec4 texColor = texture(ourTexture, TexCoord);\n"
+    "        // Отбрасываем пиксели с низким альфа-каналом (для спрайтов, деревьев и т.д.)\n"
+    "        if (texColor.a < 0.1) discard;\n"
+    "        FragColor = texColor;\n"
     "    } else {\n"
     "        FragColor = vec4(material.color, 1.0);\n"
     "    }\n"
@@ -197,20 +202,19 @@ unsigned int indicesCube[] = {
 };
 
 IRenderApi* renderer;
-Camera* camera;
 uint32_t createTexture(const char* path);
 
 int main() {
-
+    
     // just like in future init in RixtenRoot
     MemoryArena& arena = MemoryArena::GetInstance();
-    
+    ResourceManager resourceManager;
     EcsManager ecs;
     
     InputState inputState = {};
     inputState.width = 800;
     inputState.height = 600;
-
+    
     Entity singltone = ecs.createEntity();
     
     ecs.createPool<InputState>(1, 1);
@@ -228,13 +232,13 @@ int main() {
         0.0f,
         true
     };
-
+    
     ecs.createPool<Camera>();
     Entity camera = ecs.createEntity();
     ecs.createComponent<Camera>(camera, cameraComponent);
-
+    
     ActiveCamera aCamera = {camera};
-
+    
     //Camera camera(glm::vec3(0.0f, 0.0f, 2.0f));
     ecs.createComponent<ActiveCamera>(singltone, aCamera);
     
@@ -246,42 +250,87 @@ int main() {
         RendererOpenGL();
     #endif
     
+    //resourceManager.registerResource<texture>(1);
+    resourceManager.registerResource<VertexLayout>(1);
+    resourceManager.registerResource<MeshResource>(12);
+    resourceManager.registerResource<ModelResource>(1);
+
+    // ResourceIndex bresenham4 = resourceManager.createResource<texture>(textureLoader::load("7c77fe21d1286a3f.png.png"));
+    // texture bresenham4Resource = resourceManager.getResource<texture>(bresenham4);
+    // renderer->createTexture(
+    //     bresenham4Resource.data, 
+    //     bresenham4Resource.width, 
+    //     bresenham4Resource.height, 
+    //     bresenham4Resource.nrChannels
+    // );
+    
+    // textureLoader::unload(bresenham4Resource);
+
     // create transformations
-    glm::mat4 transform = glm::mat4(1.0f);  // make sure to initialize matrix to identity matrix first
+    //glm::mat4 transform = glm::mat4(1.0f);  // make sure to initialize matrix to identity matrix first
     //transform = glm::rotate(transform, glm::radians(20.0f), glm::vec3(1.0f, 0.3f, 0.5f));
     
     renderer->Init();
-    
+
     MaterialData matData{1.0f, 0.0, 1.0, true};
-    Material simpleMat {
-        renderer->createShader(vertexShaderSource1, fragmentShaderSource1),
-        createTexture("bresenham4.png"),
-        renderer->createMaterialUBO(matData)
-    };
-    
-    RenderSystem renderSys(renderer, &platform);
+
+    RenderSystem renderSys(renderer, &platform, &resourceManager);
     MovementSystem myvSys;
     
-    ecs.createPool<Mesh>();
-    ecs.createPool<Material>();
-    ecs.createPool<glm::mat4>();
+    ecs.createPool<MeshGPU>(12);
+    ecs.createPool<Material>(12);
+    ecs.createPool<glm::mat4>(12);
 
     ecs.RegisterSystem(renderSys);
     ecs.RegisterSystem(myvSys);
 
-    Entity simple = ecs.createEntity();
+    ModelLoaderGLTF modelLoader(&resourceManager);
+
+    //ResourceIndex suzanne = resourceManager.createResource<Model>(modelLoader.load("justin.glb"));
+    //Model& suz = resourceManager.getResource<Model>(suzanne);
+
+    ModelResource suz = modelLoader.load("justin.glb");
+    texture justinTexture = textureLoader::load("gggg.png");
+    uint32_t textureJ = renderer->createTexture(
+        justinTexture.data, justinTexture.width, justinTexture.height, justinTexture.nrChannels
+    ); 
+
+    for(int i = 0; i < suz.subMeshes.size(); i++) {
+        Entity suzanne_glb = ecs.createEntity();
+
+        MeshResource& subMesh = resourceManager.getResource<MeshResource>(suz.subMeshes[i].mesh);
+        VertexLayout& subMeshVL = resourceManager.getResource<VertexLayout>(subMesh.vertexLayout);
+        for (uint32_t i = 0; i < 5 && i; ++i) {
+            float* v =
+                reinterpret_cast<float*>(arena.getPtr(subMesh.verticesArenaOffset) + i * subMeshVL.stride);
+        }
+        MeshGPU subM = renderer->createMesh(
+            subMeshVL,  
+            arena.getPtr(subMesh.verticesArenaOffset),
+            subMesh.verticesCount, 
+            arena.getPtr(subMesh.indicesArenaOffset),
+            subMesh.indicesCount
+        );
+        ecs.createComponent<MeshGPU>(suzanne_glb, subM);
+        ecs.createComponent<Material>(suzanne_glb, 
+            renderer->createShader(vertexShaderSource1, fragmentShaderSource1),
+            textureJ, //bresenham4Resource.gpuIndex,
+            renderer->createMaterialUBO(matData)
+        );
+        ecs.createComponent<glm::mat4>(suzanne_glb, glm::mat4(1.0f));
+    } 
+
+    // Entity simple = ecs.createEntity();
     
-    VertexLayout vl;
-    vl.attributeCount = 2;
-    vl.attributes[0] = {0, static_cast<uint32_t>(GL_FLOAT), 3, false};
-    vl.attributes[1] = {0, static_cast<uint32_t>(GL_FLOAT), 2, false};
-    //vl.attributes[2] = {0, static_cast<uint32_t>(GL_FLOAT), 3, false};
-    vl.stride = sizeof(Vertex);
+    // VertexLayout vl;
+    // vl.attributeCount = 2;
+    // vl.attributes[0] = {0, AttributeType::float_type, 3, false};
+    // vl.attributes[1] = {0, AttributeType::float_type, 2, false};
+    // //vl.attributes[2] = {0, static_cast<uint32_t>(GL_FLOAT), 3, false};
+    // vl.stride = sizeof(Vertex);
     
-    Mesh square = renderer->createMesh(verticesC, sizeof(verticesC), indicesC, sizeof(indicesC), vl);
-    ecs.createComponent<Mesh>(simple, square);
-    ecs.createComponent<Material>(simple, simpleMat);
-    ecs.createComponent<glm::mat4>(simple, transform);
+    // Mesh square = renderer->createMesh(vl, verticesC, sizeof(verticesC), indicesC, sizeof(indicesC));
+    // ecs.createComponent<Mesh>(simple, square);
 
     float deltaTime = 0.0f;  // Time between current frame and last frame
     float lastFrame = 0.0f;  // Time of last frame
@@ -289,8 +338,40 @@ int main() {
     float fps = 0.0f;
     int frameCount = 0;
     float timeAccumulator = 0.0f;
+    int i = 0;
+    while (!platform.WindowShouldClose()) {
 
-    while (true) {
+        if (ecs.getComponent<InputState>(singltone)->keys[GLFW_KEY_ESCAPE]) {
+            platform.~PlatformGLFW();
+            break;
+        };
+
+        // if (ecs.getComponent<InputState>(singltone)->keysPressed[GLFW_KEY_F] && i < suz.subMeshes.size()) {
+        //     Entity suzanne_glb = ecs.createEntity();
+
+        //     MeshResource& subMesh = resourceManager.getResource<MeshResource>(suz.subMeshes[i].mesh);
+        //     VertexLayout& subMeshVL = resourceManager.getResource<VertexLayout>(subMesh.vertexLayout);
+        //     for (uint32_t i = 0; i < 5 && i; ++i) {
+        //         float* v =
+        //             reinterpret_cast<float*>(arena.getPtr(subMesh.verticesArenaOffset) + i * subMeshVL.stride);
+        //     }
+        //     Mesh subM = renderer->createMesh(
+        //         subMeshVL,  
+        //         arena.getPtr(subMesh.verticesArenaOffset),
+        //         subMesh.verticesCount, 
+        //         arena.getPtr(subMesh.indicesArenaOffset),
+        //         subMesh.indicesCount
+        //     );
+        //     ecs.createComponent<Mesh>(suzanne_glb, subM);
+        //     ecs.createComponent<Material>(suzanne_glb, 
+        //         renderer->createShader(vertexShaderSource1, fragmentShaderSource1),
+        //         texture, //bresenham4Resource.gpuIndex,
+        //         renderer->createMaterialUBO(matData)
+        //     );
+        //     ecs.createComponent<glm::mat4>(suzanne_glb, glm::mat4(1.0f));
+        //     i++;
+        // }
+
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;

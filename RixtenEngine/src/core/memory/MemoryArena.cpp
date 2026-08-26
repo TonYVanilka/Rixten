@@ -87,6 +87,11 @@ void MemoryArena::deallocateByOffset(size_t offset) {
 
 // no tested before !!!
 size_t MemoryArena::resizeSlot(size_t offset, size_t newSize, uint8_t align) {
+
+    if(offset < sizeof(SlotHeader) || offset >= MemorySize) {
+        LOG_FATAL("Global arena resizeSlot() has nonvalide offset!");
+    }
+
     LOG_WARN("Slot in global arena was resized!");
     SlotHeader* usedHeader = reinterpret_cast<SlotHeader*>(memory + offset - sizeof(SlotHeader));
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "core/ecs/IcomponentPool.h"
 #include "core/memory/DArr.h"
 
@@ -22,7 +23,8 @@ public:
         uint16_t spraceMinComponentCount = MAXentities);
     ~ComponentPool();
 
-    void addComponent(const Entity& handle, const T& component);
+    template <typename... Args>
+    void addComponent(const Entity& handle, Args&&... args);
     void removeComponent(const Entity& handle) override;
 
     bool hasComponent(const Entity& handle) const override;
@@ -45,10 +47,11 @@ inline ComponentPool<T>::~ComponentPool() {
 }
 
 template <typename T>
-inline void ComponentPool<T>::addComponent(const Entity& handle, const T& component) {
+template <typename... Args>
+inline void ComponentPool<T>::addComponent(const Entity& handle, Args&&... args) {
     
-    dense_components.push_back(component);
-    sparse.set(handle.index, dense_components.size() - 1);
+    dense_components.emplace_back(std::forward<Args>(args)...);
+    sparse.emplace(handle.index, dense_components.size() - 1);
     entitiesIndices.set(dense_components.size() - 1, handle.index);
     componentCount++;
 }
@@ -56,10 +59,13 @@ inline void ComponentPool<T>::addComponent(const Entity& handle, const T& compon
 template <typename T>
 inline void ComponentPool<T>::removeComponent(const Entity& handle) {
     if (!hasComponent(handle)) {LOG_WARN("Component pool hasn't Entity ", handle.index) return;}
+    
+    uint32_t lastIndex = entitiesIndices[dense_components.size() - 1];
     uint32_t removedComponent = sparse[handle.index];
+    
     dense_components[removedComponent] = dense_components.back();
-
     sparse[entitiesIndices[dense_components.size() - 1]] = removedComponent;
+    entitiesIndices[removedComponent] = lastIndex;
 
     dense_components.delete_back();
     componentCount--;
@@ -67,7 +73,9 @@ inline void ComponentPool<T>::removeComponent(const Entity& handle) {
 
 template <typename T>
 inline bool ComponentPool<T>::hasComponent(const Entity& handle) const {
-    return sparse[handle.index] < dense_components.size();
+    return handle.index < sparse[handle.index]
+        && sparse[handle.index] < dense_components.size()
+        && entitiesIndices[sparse[handle.index]] == handle.index;
 }
 
 template <typename T>

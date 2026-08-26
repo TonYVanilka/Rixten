@@ -1,6 +1,8 @@
 #pragma once
 #include <cstddef>
 #include <new>
+#include <typeinfo>
+#include <type_traits>
 
 #include "core/memory/MemoryArena.h"
 #include "utils/logger.h"
@@ -17,13 +19,18 @@ private:
 
 public: 
 
-    DArr(size_t maxElementsCount_);
+    DArr(size_t maxElementsCount_ = 0);
     ~DArr();
 
     void push_back(const T& element);
     void set(uint32_t index, const T& element);
     void resize(size_t newElementCount);
     void delete_back();
+
+    template<typename... Args>
+    void emplace_back(Args&&... args);
+    template <typename... Args>
+    void emplace(uint32_t index, Args&&... args);
 
     void free();
 
@@ -42,7 +49,7 @@ template <typename T>
 inline DArr<T>::DArr(size_t maxElementsCount_) : maxElementsCount(maxElementsCount_),
     elementCount(0), arena(MemoryArena::GetInstance()) {
     if (maxElementsCount == 0) {
-        LOG_WARN("DArr created with 0 capacity");
+        LOG_WARN("DArr<", typeid(T).name(), "> created with 0 capacity");
     }
     arenaOffset = arena.allocate(sizeof(T) * maxElementsCount, alignof(T));
 }
@@ -54,26 +61,20 @@ inline DArr<T>::~DArr() {
 
 template <typename T>
 inline void DArr<T>::push_back(const T& element) {
-    
-    if(elementCount + 1 > maxElementsCount) {
+    if (elementCount + 1 > maxElementsCount) {
         resize(maxElementsCount == 0 ? 4 : maxElementsCount * 2);
     }
 
     void* ptr = arena.getPtr(arenaOffset + (elementCount * sizeof(T)));
     elementCount++;
-
-    new(ptr) T(element); 
+    new (ptr) T(element);
 }
 
 template <typename T>
 inline void DArr<T>::set(uint32_t index, const T& element) {
 
-    if(index > maxElementsCount) {
-        LOG_ERROR("DArr out of the range!");
-        return;
-    }
-
-    if(elementCount > maxElementsCount) {
+    if (elementCount > maxElementsCount || index > maxElementsCount) {
+        LOG_WARN("DArr<", typeid(T).name(), "> can't set, index: ", index, " index out of the range!");
         resize(maxElementsCount == 0 ? 4 : maxElementsCount * 2);
     }
 
@@ -91,8 +92,8 @@ inline void DArr<T>::set(uint32_t index, const T& element) {
 
 template <typename T>
 inline void DArr<T>::resize(size_t newElementCount) {
-    if (newElementCount == 0) LOG_WARN("Darr has 0 newElementCount to resize");
-    LOG_WARN("DArr resize slot called");
+    if (newElementCount == 0) LOG_WARN("DArr<", typeid(T).name(), "> has 0 newElementCount to resize");
+    LOG_WARN("DArr<", typeid(T).name(), "> resize slot called");
     arenaOffset = arena.resizeSlot(arenaOffset, newElementCount * sizeof(T), alignof(T));
     maxElementsCount = newElementCount;
 }
@@ -102,6 +103,39 @@ inline void DArr<T>::delete_back() {
     if(elementCount < 1) return;
     elementCount--;
     reinterpret_cast<T*>(arena.getPtr(arenaOffset + (elementCount * sizeof(T))))->~T();
+}
+
+template <typename T>
+template <typename... Args>
+inline void DArr<T>::emplace_back(Args&&... args) {
+    if (elementCount + 1 > maxElementsCount) {
+        resize(maxElementsCount == 0 ? 4 : maxElementsCount * 2);
+    }
+
+    void* ptr = arena.getPtr(arenaOffset + (elementCount * sizeof(T)));
+    elementCount++;
+    if constexpr (std::is_aggregate_v<T>) new (ptr) T{std::forward<Args>(args)...};
+    else new (ptr) T(std::forward<Args>(args)...);
+}
+
+template <typename T>
+template <typename... Args>
+inline void DArr<T>::emplace(uint32_t index, Args&&... args) {
+    if (elementCount > maxElementsCount || index > maxElementsCount) {
+        LOG_WARN("DArr<", typeid(T).name(), "> can't emplace, index: ", index, " out of the range!");
+        resize(maxElementsCount == 0 ? 4 : maxElementsCount * 2);
+    }
+
+    if (index >= elementCount) {
+        void* ptr = arena.getPtr(arenaOffset + (sizeof(T) * index));
+        elementCount++;
+
+        if constexpr (std::is_aggregate_v<T>) new (ptr) T{std::forward<Args>(args)...};
+        else new (ptr) T(std::forward<Args>(args)...);
+    } else {
+        if constexpr (std::is_aggregate_v<T>) (*this)[index] = T{std::forward<Args>(args)...};
+        else (*this)[index] = T(std::forward<Args>(args)...);
+    }
 }
 
 template <typename T>
@@ -116,7 +150,7 @@ inline void DArr<T>::free() {
 
 template <typename T>
 inline T& DArr<T>::back() {
-    if(elementCount == 0) { LOG_FATAL("DArr back function has 0 element count");}
+    if(elementCount == 0) { LOG_FATAL("DArr<", typeid(T).name(), "> back function has 0 element count");}
     return *reinterpret_cast<T*>(arena.getPtr(arenaOffset + ((elementCount - 1) * sizeof(T))));
 }
 
@@ -127,12 +161,12 @@ inline bool DArr<T>::empty() {
 
 template <typename T>
 inline T& DArr<T>::operator[](size_t index) {
-    if(index >= maxElementsCount) { LOG_FATAL("DArr index out of the range"); }
+    if(index >= maxElementsCount) { LOG_FATAL("DArr<", typeid(T).name(), "> index out of the range"); }
     return *reinterpret_cast<T*>(arena.getPtr(arenaOffset + (sizeof(T) * index)));
 }
 
 template <typename T>
 inline const T& DArr<T>::operator[](size_t index) const {
-    if(index >= maxElementsCount) { LOG_FATAL("DArr index out of the range"); }
+    if(index >= maxElementsCount) { LOG_FATAL("DArr<", typeid(T).name(), "> index out of the range"); }
     return *reinterpret_cast<T*>(arena.getPtr(arenaOffset + (sizeof(T) * index)));
 }

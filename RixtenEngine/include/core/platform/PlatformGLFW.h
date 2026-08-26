@@ -5,6 +5,7 @@
 
 struct InputState {
     bool keys[GLFW_KEY_LAST];
+    bool keysPressed[GLFW_KEY_LAST];
     double mouseX, mouseY;
     double mouseDeltaX, mouseDeltaY;
     bool UseMouse;
@@ -30,7 +31,7 @@ public:
     void Init(int width_, int height_, const char* title_, InputState* inputState_);
     void swapBuffer();
     void poolEvent();
-    bool IsWindowOpen() const;
+    bool WindowShouldClose() const;
 
     GLFWwindow* GetWindowHandle() const;
 

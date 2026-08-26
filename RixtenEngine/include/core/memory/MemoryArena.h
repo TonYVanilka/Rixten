@@ -16,7 +16,7 @@ struct MemoryArena {
 
     // 1 kb = 1024 bytes
 
-    const size_t MinMemoryAllocationKB = 64 * 1024;
+    const size_t MinMemoryAllocationKB = 128 * 1024;
 
     // defragmentation doesn't work at all
     const size_t MaxMemoryAllocationKB = 64 * 1024;

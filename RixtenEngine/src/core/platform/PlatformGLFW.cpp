@@ -6,6 +6,7 @@ void PlatformGLFW::KeyCallback(GLFWwindow * window, int key, int scancode, int a
 
     if (action == GLFW_PRESS) {
         self->inputState->keys[key] = true;
+        self->inputState->keysPressed[key] = true;
     } else if (action == GLFW_RELEASE) {
         self->inputState->keys[key] = false;
     }
@@ -86,9 +87,10 @@ void PlatformGLFW::swapBuffer() {
 
 void PlatformGLFW::poolEvent() {
     glfwPollEvents();
+    for(int i = 0; i < GLFW_KEY_LAST + 1; i++) inputState->keysPressed[i] = false;
 }
 
-bool PlatformGLFW::IsWindowOpen() const {
+bool PlatformGLFW::WindowShouldClose() const {
     return glfwWindowShouldClose(windowHandle);
 }
 

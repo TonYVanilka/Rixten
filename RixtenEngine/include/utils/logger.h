@@ -13,7 +13,7 @@ enum LogLevel {
 
 namespace Logger {
 
-    inline LogLevel logLevel = LogLevel::DEBUG;
+    inline LogLevel logLevel = LogLevel::WARN;
 
     inline const char* LogTypeToString(LogLevel type) {
         switch (type) {

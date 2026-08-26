@@ -1,13 +1,8 @@
-#include "ResourceManager.h"
+#include "core/resourceManager/ResourceManager.h"
+#include "core/memory/MemoryArena.h"
 
-ResourceManager::ResourceManager() : meshes(MINassets) {
+ResourceManager::ResourceManager() : resourcesPools(MINassets), arena(MemoryArena::GetInstance()) {
 }
 
 ResourceManager::~ResourceManager() {
-}
-
-index ResourceManager::loadMesh(const char* path) {
-    
-
-    return index();
 }

@@ -1,6 +1,6 @@
 #pragma once
+
 #include <stdint.h>
-#include "core/render/ShaderBindings.h"
 
 struct MaterialData {
     float color[3];

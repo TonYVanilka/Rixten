@@ -16,9 +16,10 @@ Entity EcsManager::createEntity() {
     return ecs.createEntity();
 }
 
-// can has problems, i don't test generation in entity
-void EcsManager::removeEntity(Entity handle) {
-    if (!ecs.isValid(handle)) {LOG_WARN("can't remove entity, Entity nonvalid", handle.index) return;}
+// can has problems, has optimization with bit masks
+// can has problem with generation
+void EcsManager::removeEntity(const Entity& handle) {
+    if (!ecs.isValid(handle)) {LOG_WARN("ECS: can't remove entity, Entity nonvalid", handle.index) return;}
     for(int i = 0; i < pools.size(); i++) {
         IcomponentPool* pool = reinterpret_cast<IcomponentPool*>(arena.getPtr(pools[i]));
         if (pool->hasComponent(handle)) 
